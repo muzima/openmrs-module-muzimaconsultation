@@ -28,7 +28,9 @@ import org.openmrs.Patient;
 import org.openmrs.User;
 import org.openmrs.annotation.Handler;
 import org.openmrs.api.context.Context;
+import org.openmrs.module.muzima.api.service.DataService;
 import org.openmrs.module.muzima.exception.QueueProcessorException;
+import org.openmrs.module.muzima.model.NotificationData;
 import org.openmrs.module.muzima.model.QueueData;
 import org.openmrs.module.muzima.model.handler.QueueDataHandler;
 import org.openmrs.obs.ComplexData;
@@ -114,6 +116,9 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
         }
 
         Context.getEncounterService().saveEncounter(encounter);
+
+        NotificationData notificationData = new NotificationData();
+        Context.getService(DataService.class).saveNotificationData(notificationData);
     }
 
     private Date parseDate(final String dateValue) {
