@@ -19,7 +19,7 @@ import org.openmrs.api.context.Context;
 import org.openmrs.test.BaseModuleContextSensitiveTest;
 
 /**
- * Tests {@link ${ConsultationService}}.
+ * Tests {@link ConsultationService}.
  */
 public class ConsultationServiceTest extends BaseModuleContextSensitiveTest {
 	
@@ -27,4 +27,9 @@ public class ConsultationServiceTest extends BaseModuleContextSensitiveTest {
 	public void shouldSetupContext() {
 		assertNotNull(Context.getService(ConsultationService.class));
 	}
+
+    @Test
+    public void postingQueueData() throws Exception {
+
+    }
 }
