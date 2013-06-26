@@ -20,7 +20,7 @@ import org.openmrs.BaseOpenmrsMetadata;
 /**
  * It is a model class. It should extend either {@link BaseOpenmrsObject} or {@link BaseOpenmrsMetadata}.
  */
-public class Consultation extends BaseOpenmrsObject implements Serializable {
+public class ConsultationData extends BaseOpenmrsObject implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 	
