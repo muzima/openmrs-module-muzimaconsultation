@@ -7,7 +7,7 @@
     </li>
 
 	<li <c:if test='<%= request.getRequestURI().contains("/manage") %>'>class="active"</c:if>>
-		<a href="${pageContext.request.contextPath}/module/muzimaconsultation/manage.form">
+		<a href="${pageContext.request.contextPath}/module/muzimaconsultation/manage.form#consults">
             <spring:message code="muzimaconsultation.manage" />
         </a>
 	</li>

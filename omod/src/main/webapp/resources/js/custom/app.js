@@ -1,9 +1,10 @@
 var muzimaconsultation = angular.module('muzimaconsultation', []);
 
 muzimaconsultation.
-    config(['$routeProvider', function ($routeProvider) {
-        $routeProvider.
-            when('/muzimaconsultation', {templateUrl: '../../moduleResources/muzimaconsultation/partials/consults.html'}).
-            otherwise({redirectTo: '/forms'});
+    config(['$routeProvider', '$compileProvider', function ($routeProvider, $compileProvider) {
+        $compileProvider.urlSanitizationWhitelist(/^\s*(https?|ftp|mailto|file):/);
+        $routeProvider.when('/consults', {templateUrl: '../../moduleResources/muzimaconsultation/partials/consults.html'});
+        $routeProvider.when('/consult/:uuid', {templateUrl: '../../moduleResources/muzimaconsultation/partials/consult.html'});
+        $routeProvider.otherwise({redirectTo: '/consults'});
     }]);
 
