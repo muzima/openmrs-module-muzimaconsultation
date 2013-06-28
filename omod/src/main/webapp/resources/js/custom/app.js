@@ -36,15 +36,11 @@ muzimaconsultation.factory('$notification', function ($http) {
 
 
 muzimaconsultation.factory('$notifications', function ($http) {
-    var getNotificationFor = function (uuid) {
-        return $http.get('notifications.json?for=' + uuid);
-    };
-    var getNotificationFrom = function (uuid) {
-        return $http.get('notifications.json?from=' + uuid);
+    var getNotifications = function (uuid, mode) {
+        return $http.get('notifications.json?uuid=' + uuid + '&sender=' + mode);
     };
     return {
-        getNotificationFor: getNotificationFor,
-        getNotificationFrom: getNotificationFrom
+        getNotifications: getNotifications
     }
 });
 

@@ -21,17 +21,26 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * TODO: Write brief description about the class here.
  */
 @Controller
-@RequestMapping(value = "/module/muzimaconsultation/user")
+@RequestMapping(value = "/module/muzimaconsultation/user.json")
 public class AuthenticatedUserController {
 
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
-    public Person getAuthenticatedUser() {
+    public Map<String, Object> getAuthenticatedUser() {
+        Map<String, Object> response = new HashMap<String, Object>();
         User authenticatedUser = Context.getAuthenticatedUser();
-        return authenticatedUser.getPerson();
+        Person authenticatedPerson = authenticatedUser.getPerson();
+        response.put("uuid", authenticatedPerson.getUuid());
+        response.put("givenName", authenticatedPerson.getGivenName());
+        response.put("familyName", authenticatedPerson.getFamilyName());
+        response.put("middleName", authenticatedPerson.getMiddleName());
+        return response;
     }
 }

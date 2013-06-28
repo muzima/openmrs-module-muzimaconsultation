@@ -2,8 +2,8 @@
     <div class="span2">
         <ul class="nav nav-tabs nav-stacked">
             <li><a href="#/newConsult">Compose</a></li>
-            <li><a href="#/consults/false" nc-click="">Incoming</a></li>
-            <li><a href="#/consults/true" nc-click="">Outgoing</a></li>
+            <li><a href="#/consults/false">Incoming</a></li>
+            <li><a href="#/consults/true">Outgoing</a></li>
         </ul>
     </div>
     <div class="span8">
@@ -19,16 +19,18 @@
                     <tr>
                         <th>#</th>
                         <th>Sender</th>
+                        <th>Recipient</th>
                         <th>Message</th>
                         <th>Date</th>
                     </tr>
                     </thead>
                     <tbody>
                     <tr ng-repeat="notification in notifications | filter:search | orderBy:'dateCreated'">
-                        <td>{{$index + 1}}</td>
-                        <td>{{notification.forPerson.givenName}} {{notification.forPerson.familyName}}</td>
+                        <td><a href="#/consult/{{notification.uuid}}">{{$index + 1}}</a></td>
+                        <td>{{notification.sender.givenName}} {{notification.sender.familyName}}</td>
+                        <td>{{notification.recipient.givenName}} {{notification.recipient.familyName}}</td>
                         <td>{{notification.payload}}</td>
-                        <td>{{notification.dateCreated}}</td>
+                        <td>{{notification.datetime}}</td>
                     </tr>
                     </tbody>
                 </table>

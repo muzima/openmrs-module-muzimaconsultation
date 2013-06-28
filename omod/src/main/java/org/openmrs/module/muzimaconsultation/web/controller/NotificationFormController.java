@@ -13,11 +13,10 @@
  */
 package org.openmrs.module.muzimaconsultation.web.controller;
 
-import org.openmrs.Person;
-import org.openmrs.User;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.muzima.api.service.DataService;
 import org.openmrs.module.muzima.model.NotificationData;
+import org.openmrs.module.muzimaconsultation.web.utils.NotificationDataConverter;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,20 +25,20 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.Map;
 
 /**
  * TODO: Write brief description about the class here.
  */
 @Controller
-@RequestMapping(value = "module/muzimaconsultation/notification.form")
+@RequestMapping(value = "module/muzimaconsultation/notification.json")
 public class NotificationFormController {
 
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
-    public NotificationData getNotificationByUuid(@RequestParam(required = true) String uuid) {
+    public Map<String, Object> getNotificationByUuid(@RequestParam(required = true) String uuid) {
         DataService service = Context.getService(DataService.class);
-        return service.getNotificationDataByUuid(uuid);
+        return NotificationDataConverter.convert(service.getNotificationDataByUuid(uuid));
     }
 
     @RequestMapping(method = RequestMethod.POST, value="data")

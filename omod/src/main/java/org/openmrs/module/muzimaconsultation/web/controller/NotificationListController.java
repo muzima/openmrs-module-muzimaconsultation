@@ -13,40 +13,52 @@
  */
 package org.openmrs.module.muzimaconsultation.web.controller;
 
+import org.apache.commons.lang.StringUtils;
 import org.openmrs.Person;
+import org.openmrs.User;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.muzima.api.service.DataService;
 import org.openmrs.module.muzima.model.NotificationData;
+import org.openmrs.module.muzimaconsultation.web.utils.NotificationDataConverter;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.ServletRequestUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.io.IOException;
+import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * TODO: Write brief description about the class here.
  */
 @Controller
-@RequestMapping(value = "module/muzimaconsultation/notifications.list")
+@RequestMapping(value = "module/muzimaconsultation/notifications.json")
 public class NotificationListController {
 
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
-    public List<NotificationData> getNotificationsFor(@RequestParam(value = "for", required = true) String uuid) {
-        Person person = Context.getPersonService().getPersonByUuid(uuid);
-        DataService service = Context.getService(DataService.class);
-        return service.getAllNotificationDataFrom(person);
-    }
+    public List<Object> getNotificationsFor(final HttpServletRequest request) {
+        List<Object> response = new ArrayList<Object>();
 
-    @RequestMapping(method = RequestMethod.GET)
-    @ResponseBody
-    public List<NotificationData> getNotificationsFrom(@RequestParam(value = "from", required = true) String uuid) {
+        String uuid = ServletRequestUtils.getStringParameter(request, "uuid", StringUtils.EMPTY);
+        boolean sender = ServletRequestUtils.getBooleanParameter(request, "sender", false);
+
         Person person = Context.getPersonService().getPersonByUuid(uuid);
         DataService service = Context.getService(DataService.class);
-        return service.getAllNotificationDataFor(person);
+
+        List<NotificationData> notificationDataList;
+        if (sender) {
+            notificationDataList = service.getAllNotificationDataFrom(person);
+        } else {
+            notificationDataList = service.getAllNotificationDataFor(person);
+        }
+
+        for (NotificationData notificationData : notificationDataList) {
+            response.add(NotificationDataConverter.convert(notificationData));
+        }
+
+        return response;
     }
 }
