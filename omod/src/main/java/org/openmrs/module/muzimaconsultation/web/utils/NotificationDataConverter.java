@@ -36,13 +36,13 @@ public class NotificationDataConverter {
             converted.put("payload", notificationData.getPayload());
             converted.put("subject", notificationData.getSubject());
 
-            Person sender = notificationData.getFromPerson();
+            Person sender = notificationData.getSender();
             Map<String, Object> senderObject = new HashMap<String, Object>();
             senderObject.put("uuid", sender.getUuid());
             senderObject.put("name", sender.getPersonName().getFullName());
             converted.put("sender", senderObject);
 
-            Person recipient = notificationData.getForPerson();
+            Person recipient = notificationData.getRecipient();
             Map<String, Object> recipientObject = new HashMap<String, Object>();
             recipientObject.put("uuid", recipient.getUuid());
             recipientObject.put("name", recipient.getPersonName().getFullName());

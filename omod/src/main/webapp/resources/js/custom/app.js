@@ -29,12 +29,12 @@ muzimaconsultation.factory('$notification', function ($http) {
     var getNotificationByUuid = function (uuid) {
         return $http.get('notification.json?uuid=' + uuid);
     };
-    var saveNotification = function (notification) {
-        return $http.post('notification.json', notification);
+    var sendNotification = function (recipient, subject, payload) {
+        return $http.post('notification.json', {"recipient": recipient, "subject": subject, "payload": payload});
     };
     return {
         getNotificationByUuid: getNotificationByUuid,
-        saveNotification: saveNotification
+        sendNotification: sendNotification
     }
 });
 

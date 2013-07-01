@@ -24,6 +24,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.ServletRequestUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpServletRequest;
@@ -39,20 +40,18 @@ public class NotificationListController {
 
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
-    public List<Object> getNotificationsFor(final HttpServletRequest request) {
+    public List<Object> getNotificationsFor(final @RequestParam(value = "uuid", required = true) String uuid,
+                                            final @RequestParam(value = "sender", required = true) boolean sender) {
         List<Object> response = new ArrayList<Object>();
-
-        String uuid = ServletRequestUtils.getStringParameter(request, "uuid", StringUtils.EMPTY);
-        boolean sender = ServletRequestUtils.getBooleanParameter(request, "sender", false);
 
         Person person = Context.getPersonService().getPersonByUuid(uuid);
         DataService service = Context.getService(DataService.class);
 
         List<NotificationData> notificationDataList;
         if (sender) {
-            notificationDataList = service.getAllNotificationDataFrom(person);
+            notificationDataList = service.getAllNotificationDataBySender(person);
         } else {
-            notificationDataList = service.getAllNotificationDataFor(person);
+            notificationDataList = service.getAllNotificationDataByRecipient(person);
         }
 
         for (NotificationData notificationData : notificationDataList) {

@@ -13,17 +13,22 @@
  */
 package org.openmrs.module.muzimaconsultation.web.controller;
 
+import org.apache.commons.lang.StringUtils;
+import org.openmrs.Person;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.muzima.api.service.DataService;
 import org.openmrs.module.muzima.model.NotificationData;
 import org.openmrs.module.muzimaconsultation.web.utils.NotificationDataConverter;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.ServletRequestUtils;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.Map;
 
@@ -36,15 +41,25 @@ public class NotificationFormController {
 
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
-    public Map<String, Object> getNotificationByUuid(@RequestParam(required = true) String uuid) {
+    public Map<String, Object> getNotificationByUuid(final @RequestParam(required = true) String uuid) {
         DataService service = Context.getService(DataService.class);
         return NotificationDataConverter.convert(service.getNotificationDataByUuid(uuid));
     }
 
-    @RequestMapping(method = RequestMethod.POST, value="data")
-    @ResponseBody
-    public void save(@RequestBody NotificationData data) throws IOException {
+    @RequestMapping(method = RequestMethod.POST)
+    public void save(final @RequestBody Map<String, Object> request) throws IOException {
+        String recipientUuid = request.get("recipient").toString();
+        String subject = request.get("subject").toString();
+        String payload = request.get("payload").toString();
+
         DataService service = Context.getService(DataService.class);
-        service.saveNotificationData(data);
+        Person sender = Context.getAuthenticatedUser().getPerson();
+        Person recipient = Context.getPersonService().getPersonByUuid(recipientUuid);
+        NotificationData notificationData = new NotificationData();
+        notificationData.setPayload(payload);
+        notificationData.setSubject(subject);
+        notificationData.setSender(sender);
+        notificationData.setRecipient(recipient);
+        service.saveNotificationData(notificationData);
     }
 }

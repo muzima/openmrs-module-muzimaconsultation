@@ -47,7 +47,7 @@
                     <div class="span5">
                         <div>
                             <input class="span10" placeholder="Recipient Name" type="text"
-                                   ng-model="recipient"
+                                   ng-model="compose.recipient"
                                    typeahead="person as person.name for person in persons | filter:$viewValue">
                         </div>
                         <div>
@@ -56,16 +56,16 @@
                         </div>
                         <div>
                             <input class="span10" placeholder="Subject" type="text"
-                                   ng-model="subject">
+                                   ng-model="compose.subject">
                         </div>
                     </div>
                     <!-- span4 -->
                     <div class="row-fluid">
                         <div class="span12">
                             <textarea class="span12" placeholder="Type your questions here..." rows="10"
-                                      ng-model="payload">
+                                      ng-model="compose.payload">
                             </textarea>
-                            <button type="submit" ng-click="send()" class="btn">Send</button>
+                            <button type="submit" ng-click="send(compose)" class="btn">Send</button>
                             <button type="submit" ng-click="cancel()" class="btn">Cancel</button>
                         </div>
                         <!-- span12 -->
@@ -112,16 +112,16 @@
                         </div>
                         <div>
                             <input class="span10" placeholder="Subject" type="text"
-                                   ng-model="subject">
+                                   ng-model="compose.subject">
                         </div>
                     </div>
                     <!-- span4 -->
                     <div class="row-fluid">
                         <div class="span12">
                             <textarea class="span12" placeholder="Type your questions here..." rows="10"
-                                      ng-model="payload">
+                                      ng-model="compose.payload">
                             </textarea>
-                            <button type="submit" ng-click="send()" class="btn">Send</button>
+                            <button type="submit" ng-click="send(compose)" class="btn">Send</button>
                             <button type="submit" ng-click="cancel()" class="btn">Cancel</button>
                         </div>
                         <!-- span12 -->
