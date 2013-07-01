@@ -11,25 +11,26 @@
             <form id="consult" class="clearfix">
                 <div class="span5">
                     <div>
-                        <input class="span10" id="recipient" title="Recipient Name" name="recipient" required=""
-                               placeholder="Recipient Name" type="text">
+                        <input class="span10" id="recipient" title="Recipient Name" name="recipient"
+                               ng-model="" required="" placeholder="Recipient Name" type="text">
                     </div>
                     <div>
-                        <input class="span10" id="sender" title="Sender Name" name="sender" required=""
-                               placeholder="Sender Name" type="text">
+                        <input class="span10" id="sender" title="Sender Name" name="sender"
+                               ng-model="" required="" placeholder="Sender Name" type="text">
                     </div>
                     <div>
                         <input class="span10" id="subject" title="Subject" name="subject"
-                               required="" placeholder="Subject" type="text">
+                               ng-model="" required="" placeholder="Subject" type="text">
                     </div>
                 </div>
                 <!-- span4 -->
                 <div class="row-fluid">
                     <div class="span12">
-                        <textarea id="textarea" name="message" required=""
+                        <textarea id="textarea" name="message"
+                                  ng-model="" required=""
                                   placeholder="Type your questions here..." rows="10"
                                   class="span12"></textarea>
-                        <button type="submit" class="btn">Send Message</button>
+                        <button type="submit" class="btn">Reply Message</button>
                     </div>
                     <!-- span12 -->
                 </div>

@@ -14,10 +14,14 @@ muzimaconsultation.
 
 muzimaconsultation.factory('$person', function($http) {
     var getAuthenticatedPerson = function() {
-        return $http.get('user.json');
+        return $http.get('authenticated.json');
     };
+    var getAllPerson = function() {
+        return $http.get(users.json);
+    }
     return {
-        getAuthenticatedPerson: getAuthenticatedPerson
+        getAuthenticatedPerson: getAuthenticatedPerson,
+        getAllPerson: getAllPerson
     }
 });
 

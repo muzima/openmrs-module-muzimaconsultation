@@ -15,27 +15,46 @@ package org.openmrs.module.muzimaconsultation.web.controller;
 
 import org.openmrs.Person;
 import org.openmrs.User;
+import org.openmrs.api.UserService;
 import org.openmrs.api.context.Context;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
  * TODO: Write brief description about the class here.
  */
 @Controller
-@RequestMapping(value = "/module/muzimaconsultation/user.json")
-public class AuthenticatedUserController {
+public class UserController {
 
-    @RequestMapping(method = RequestMethod.GET)
+    @RequestMapping(value = "/module/muzimaconsultation/authenticated.json", method = RequestMethod.GET)
     @ResponseBody
     public Map<String, Object> getAuthenticatedUser() {
-        Map<String, Object> response = new HashMap<String, Object>();
         User authenticatedUser = Context.getAuthenticatedUser();
+        return convertUser(authenticatedUser);
+    }
+
+    @RequestMapping(value = "/module/muzimaconsultation/users.json", method = RequestMethod.GET)
+    @ResponseBody
+    public List<Object> getAllUsers() {
+        UserService userService = Context.getUserService();
+        List<User> users = userService.getAllUsers();
+
+        List<Object> objects = new ArrayList<Object>();
+        for (User user : users) {
+            objects.add(convertUser(user));
+        }
+        return objects;
+    }
+
+    private Map<String, Object> convertUser(final User authenticatedUser) {
+        Map<String, Object> response = new HashMap<String, Object>();
         Person authenticatedPerson = authenticatedUser.getPerson();
         response.put("uuid", authenticatedPerson.getUuid());
         response.put("givenName", authenticatedPerson.getGivenName());
