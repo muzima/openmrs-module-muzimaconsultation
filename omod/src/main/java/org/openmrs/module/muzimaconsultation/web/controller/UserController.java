@@ -53,13 +53,12 @@ public class UserController {
         return objects;
     }
 
+    //TODO: backend should return full name so it's searchable. Just need them for display and typeahead.
     private Map<String, Object> convertUser(final User authenticatedUser) {
         Map<String, Object> response = new HashMap<String, Object>();
         Person authenticatedPerson = authenticatedUser.getPerson();
         response.put("uuid", authenticatedPerson.getUuid());
-        response.put("givenName", authenticatedPerson.getGivenName());
-        response.put("familyName", authenticatedPerson.getFamilyName());
-        response.put("middleName", authenticatedPerson.getMiddleName());
+        response.put("name", authenticatedPerson.getPersonName().getFullName());
         return response;
     }
 }

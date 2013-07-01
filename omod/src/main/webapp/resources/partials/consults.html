@@ -27,8 +27,8 @@
                     <tbody>
                     <tr ng-repeat="notification in notifications | filter:search | orderBy:'dateCreated'">
                         <td><a href="#/consult/{{notification.uuid}}">{{$index + 1}}</a></td>
-                        <td>{{notification.sender.givenName}} {{notification.sender.familyName}}</td>
-                        <td>{{notification.recipient.givenName}} {{notification.recipient.familyName}}</td>
+                        <td>{{notification.sender.name}}</td>
+                        <td>{{notification.recipient.name}}</td>
                         <td>{{notification.payload}}</td>
                         <td>{{notification.datetime}}</td>
                     </tr>

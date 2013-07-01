@@ -39,17 +39,13 @@ public class NotificationDataConverter {
             Person sender = notificationData.getFromPerson();
             Map<String, Object> senderObject = new HashMap<String, Object>();
             senderObject.put("uuid", sender.getUuid());
-            senderObject.put("givenName", sender.getGivenName());
-            senderObject.put("familyName", sender.getFamilyName());
-            senderObject.put("middleName", sender.getMiddleName());
+            senderObject.put("name", sender.getPersonName().getFullName());
             converted.put("sender", senderObject);
 
             Person recipient = notificationData.getForPerson();
             Map<String, Object> recipientObject = new HashMap<String, Object>();
             recipientObject.put("uuid", recipient.getUuid());
-            recipientObject.put("givenName", recipient.getGivenName());
-            recipientObject.put("familyName", recipient.getFamilyName());
-            recipientObject.put("middleName", recipient.getMiddleName());
+            recipientObject.put("name", recipient.getPersonName().getFullName());
             converted.put("recipient", recipientObject);
 
             String datetime = Context.getDateFormat().format(notificationData.getDateCreated());

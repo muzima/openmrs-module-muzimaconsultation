@@ -4,6 +4,7 @@ function CreateConsultationCtrl($scope, $routeParams, $person, $notification) {
     console.log("Sender: " + $scope.sender);
     $scope.uuid = $routeParams.uuid;
     console.log("Uuid: " + $scope.uuid);
+    $scope.compose = true;
 }
 
 function EditConsultationCtrl($scope, $routeParams, $notification) {
@@ -12,6 +13,10 @@ function EditConsultationCtrl($scope, $routeParams, $notification) {
         then(function(response) {
             $scope.notification = response.data;
         });
+
+    $scope.reply = function() {
+        $scope.edit = true;
+    }
 }
 
 function ListConsultationsCtrl($scope, $routeParams, $person, $notifications) {

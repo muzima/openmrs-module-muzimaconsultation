@@ -7,7 +7,20 @@
         </ul>
     </div>
     <div class="span8">
-        <div class="clearfix">
+        <div ng-hide="compose" class="clearfix">
+            <div class="span5">
+                <span class="span10">From: {{notification.sender.name}}</span>
+                <span class="span10">To: {{notification.sender.name}}</span>
+                <span class="span10">Subject: {{notification.subject}}</span>
+            </div>
+            <div class="row-fluid">
+                <div class="span12">
+                    {{notification.payload}}
+                    <button type="submit" class="btn">Reply Message</button>
+                </div>
+            </div>
+        </div>
+        <div ng-show="compose || reply" class="clearfix">
             <form id="consult" class="clearfix">
                 <div class="span5">
                     <div>
@@ -30,7 +43,7 @@
                                   ng-model="" required=""
                                   placeholder="Type your questions here..." rows="10"
                                   class="span12"></textarea>
-                        <button type="submit" class="btn">Reply Message</button>
+                        <button type="submit" class="btn">Send Message</button>
                     </div>
                     <!-- span12 -->
                 </div>
