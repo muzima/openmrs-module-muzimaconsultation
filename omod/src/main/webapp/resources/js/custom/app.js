@@ -1,4 +1,4 @@
-var muzimaconsultation = angular.module('muzimaconsultation', []);
+var muzimaconsultation = angular.module('muzimaconsultation', ['ui.bootstrap']);
 
 muzimaconsultation.
     config(['$routeProvider', '$compileProvider', function ($routeProvider, $compileProvider) {
@@ -17,8 +17,8 @@ muzimaconsultation.factory('$person', function($http) {
         return $http.get('authenticated.json');
     };
     var getAllPerson = function() {
-        return $http.get(users.json);
-    }
+        return $http.get("users.json");
+    };
     return {
         getAuthenticatedPerson: getAuthenticatedPerson,
         getAllPerson: getAllPerson

@@ -13,6 +13,7 @@
  */
 package org.openmrs.module.muzimaconsultation.web.controller;
 
+import org.apache.commons.lang.StringUtils;
 import org.openmrs.Person;
 import org.openmrs.User;
 import org.openmrs.api.UserService;
@@ -48,17 +49,21 @@ public class UserController {
 
         List<Object> objects = new ArrayList<Object>();
         for (User user : users) {
-            objects.add(convertUser(user));
+            // TODO: Hack to get around bogus admin and daemon users! Bleh!!!
+            if (!StringUtils.equalsIgnoreCase("admin", user.getSystemId())
+                    && !StringUtils.equalsIgnoreCase("daemon", user.getSystemId())) {
+                objects.add(convertUser(user));
+            }
         }
         return objects;
     }
 
     //TODO: backend should return full name so it's searchable. Just need them for display and typeahead.
-    private Map<String, Object> convertUser(final User authenticatedUser) {
+    private Map<String, Object> convertUser(final User user) {
         Map<String, Object> response = new HashMap<String, Object>();
-        Person authenticatedPerson = authenticatedUser.getPerson();
-        response.put("uuid", authenticatedPerson.getUuid());
-        response.put("name", authenticatedPerson.getPersonName().getFullName());
+        Person person = user.getPerson();
+        response.put("uuid", person.getUuid());
+        response.put("name", person.getPersonName().getFullName());
         return response;
     }
 }
