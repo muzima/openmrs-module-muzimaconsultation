@@ -3,13 +3,13 @@ var muzimaconsultation = angular.module('muzimaconsultation', ['ui.bootstrap']);
 muzimaconsultation.
     config(['$routeProvider', '$compileProvider', function ($routeProvider, $compileProvider) {
         $compileProvider.urlSanitizationWhitelist(/^\s*(https?|ftp|mailto|file):/);
-        $routeProvider.when('/consults/:sender', {controller: ListConsultationsCtrl,
+        $routeProvider.when('/consults/:outgoing', {controller: ListConsultationsCtrl,
             templateUrl: '../../moduleResources/muzimaconsultation/partials/consults.html'});
         $routeProvider.when('/consult/:uuid', {controller: EditConsultationCtrl,
             templateUrl: '../../moduleResources/muzimaconsultation/partials/consult.html'});
         $routeProvider.when('/newConsult', {controller: CreateConsultationCtrl,
             templateUrl: '../../moduleResources/muzimaconsultation/partials/consult.html'});
-        $routeProvider.otherwise({redirectTo: '/consults/true'});
+        $routeProvider.otherwise({redirectTo: '/consults/false'});
     }]);
 
 muzimaconsultation.factory('$person', function($http) {

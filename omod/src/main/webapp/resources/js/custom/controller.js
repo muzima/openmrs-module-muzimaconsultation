@@ -1,7 +1,6 @@
-function CreateConsultationCtrl($scope, $location, $routeParams, $person, $notification) {
-    // init the page
-    $scope.compose = true;
-    $scope.view = false;
+function CreateConsultationCtrl($scope, $location, $person, $notification) {
+    // initialize the page
+    $scope.mode = "compose";
 
     $scope.recipient = undefined;
     $person.getAllPerson().
@@ -25,11 +24,13 @@ function CreateConsultationCtrl($scope, $location, $routeParams, $person, $notif
     };
 }
 
-function EditConsultationCtrl($scope, $location, $routeParams, $notification) {
+function EditConsultationCtrl($scope, $location, $routeParams, $person, $notification) {
     // initialize the page
+    $scope.mode = "view";
+
+    // page parameter
     $scope.uuid = $routeParams.uuid;
-    $scope.view = true;
-    $scope.compose = false;
+    // get the current notification
     $notification.getNotificationByUuid($scope.uuid).
         then(function(response) {
             $scope.notification = response.data;
@@ -37,7 +38,21 @@ function EditConsultationCtrl($scope, $location, $routeParams, $notification) {
 
     // actions
     $scope.reply = function() {
-        $scope.compose = true;
+        $scope.mode = "reply";
+        // pull sender and recipient information from the notification
+        var notification = $scope.notification;
+        if ($scope.outgoing) {
+            // we're replying an outgoing notification
+            $scope.sender = notification.sender.name;
+            $scope.recipient = notification.recipient.name;
+        } else {
+            // we're replying an incoming notification
+            $scope.recipient = notification.sender.name;
+            $scope.sender = notification.recipient.name;
+        }
+        // empty subject and payload
+        $scope.payload = undefined;
+        $scope.subject = undefined;
     }
 
     $scope.cancel = function() {
@@ -46,13 +61,13 @@ function EditConsultationCtrl($scope, $location, $routeParams, $notification) {
 }
 
 function ListConsultationsCtrl($scope, $routeParams, $person, $notifications) {
-    $scope.sender = $routeParams.sender;
+    $scope.outgoing = $routeParams.outgoing;
     $person.getAuthenticatedPerson().
         then(function (response) {
             return response.data;
         }).
         then(function (person) {
-            $notifications.getNotifications(person.uuid, $scope.sender).
+            $notifications.getNotifications(person.uuid, $scope.outgoing).
                 then(function (response) {
                     $scope.notifications = response.data;
                 });

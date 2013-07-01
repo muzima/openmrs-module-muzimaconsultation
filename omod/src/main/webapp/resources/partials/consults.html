@@ -2,8 +2,10 @@
     <div class="span2">
         <ul class="nav nav-tabs nav-stacked">
             <li><a href="#/newConsult">Compose</a></li>
-            <li><a href="#/consults/false">Incoming</a></li>
-            <li><a href="#/consults/true">Outgoing</a></li>
+            <li ng-hide="outgoing" class="navigation-active"><a href="#/consults/false">Incoming</a></li>
+            <li ng-show="outgoing"><a href="#/consults/false">Incoming</a></li>
+            <li ng-show="outgoing" class="navigation-active"><a href="#/consults/true">Outgoing</a></li>
+            <li ng-hide="outgoing"><a href="#/consults/true">Outgoing</a></li>
         </ul>
     </div>
     <div class="span8">
@@ -29,7 +31,7 @@
                         <td><a href="#/consult/{{notification.uuid}}">{{$index + 1}}</a></td>
                         <td>{{notification.sender.name}}</td>
                         <td>{{notification.recipient.name}}</td>
-                        <td>{{notification.payload}}</td>
+                        <td>{{notification.subject}}</td>
                         <td>{{notification.datetime}}</td>
                     </tr>
                     </tbody>

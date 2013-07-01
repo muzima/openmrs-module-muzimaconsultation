@@ -27,8 +27,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
  * The main controller.
  */
 @Controller
-@RequestMapping(value = "/module/muzimaconsultation/manage")
-public class ConsultationManageController {
+@RequestMapping(value = "/module/muzimaconsultation/consultations")
+public class ConsultationsController {
 
 	@RequestMapping(method = RequestMethod.GET)
 	public void manage() {

@@ -15,7 +15,7 @@
 <openmrs:htmlInclude file="/moduleResources/muzimaconsultation/js/ui-bootstrap/ui-bootstrap-custom-0.4.0.js"/>
 <openmrs:htmlInclude file="/moduleResources/muzimaconsultation/js/ui-bootstrap/ui-bootstrap-custom-tpls-0.4.0.js"/>
 
-<h3><spring:message code="Manage Consultation"/></h3>
+<h3><spring:message code="muzimaconsultation.consultations.list"/></h3>
 <div class="bootstrap-scope" ng-app="muzimaconsultation">
     <div ng-view ></div>
 </div>
