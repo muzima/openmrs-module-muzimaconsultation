@@ -49,9 +49,9 @@ public class NotificationListController {
 
         List<NotificationData> notificationDataList;
         if (sender) {
-            notificationDataList = service.getAllNotificationDataBySender(person);
+            notificationDataList = service.getNotificationDataBySender(person);
         } else {
-            notificationDataList = service.getAllNotificationDataByRecipient(person);
+            notificationDataList = service.getNotificationDataByReceiver(person);
         }
 
         for (NotificationData notificationData : notificationDataList) {

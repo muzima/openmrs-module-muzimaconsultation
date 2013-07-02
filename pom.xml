@@ -23,10 +23,9 @@
     </organization>
 
     <scm>
-        <connection>scm:svn:https://svn.openmrs.org/openmrs-modules/muzimaconsultation/trunk/</connection>
-        <developerConnection>scm:svn:https://svn.openmrs.org/openmrs-modules/muzimaconsultation/trunk/
-        </developerConnection>
-        <url>https://svn.openmrs.org/openmrs-modules/muzimaconsultation/trunk/</url>
+        <connection>scm:git:https://github.com/muzima/openmrs-module-muzimaconsultation</connection>
+        <developerConnection>scm:git:https://github.com/muzima/openmrs-module-muzimaconsultation</developerConnection>
+        <url>https://github.com/muzima/openmrs-module-muzimaconsultation/</url>
     </scm>
 
     <modules>
@@ -36,6 +35,8 @@
 
     <properties>
         <openMRSVersion>1.8.2</openMRSVersion>
+        <muzimaVersion>1.0.0</muzimaVersion>
+        <minidevVersion>1.1.1</minidevVersion>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -56,13 +57,13 @@
             <dependency>
                 <groupId>org.openmrs.module</groupId>
                 <artifactId>muzima-api</artifactId>
-                <version>1.0.0</version>
+                <version>${muzimaVersion}</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>net.minidev</groupId>
                 <artifactId>json-smart</artifactId>
-                <version>1.1.1</version>
+                <version>${minidevVersion}</version>
                 <scope>test</scope>
             </dependency>
             <!-- End OpenMRS modules -->

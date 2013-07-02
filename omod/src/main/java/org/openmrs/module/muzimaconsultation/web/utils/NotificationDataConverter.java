@@ -42,7 +42,7 @@ public class NotificationDataConverter {
             senderObject.put("name", sender.getPersonName().getFullName());
             converted.put("sender", senderObject);
 
-            Person recipient = notificationData.getRecipient();
+            Person recipient = notificationData.getReceiver();
             Map<String, Object> recipientObject = new HashMap<String, Object>();
             recipientObject.put("uuid", recipient.getUuid());
             recipientObject.put("name", recipient.getPersonName().getFullName());

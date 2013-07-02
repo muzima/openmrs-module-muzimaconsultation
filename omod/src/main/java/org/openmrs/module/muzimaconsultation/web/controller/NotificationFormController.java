@@ -59,7 +59,7 @@ public class NotificationFormController {
         notificationData.setPayload(payload);
         notificationData.setSubject(subject);
         notificationData.setSender(sender);
-        notificationData.setRecipient(recipient);
+        notificationData.setReceiver(recipient);
         service.saveNotificationData(notificationData);
     }
 }
