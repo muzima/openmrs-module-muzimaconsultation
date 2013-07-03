@@ -5,13 +5,11 @@
             <spring:message code="admin.title.short" />
         </a>
     </li>
-
-	<li <c:if test='<%= request.getRequestURI().contains("/manage") %>'>class="active"</c:if>>
+	<li>
 		<a href="${pageContext.request.contextPath}/module/muzimaconsultation/consultations.list#/">
             <spring:message code="muzimaconsultation.consultations" />
         </a>
 	</li>
-	
 	<!-- Add further links here -->
 </ul>
 <h2>
