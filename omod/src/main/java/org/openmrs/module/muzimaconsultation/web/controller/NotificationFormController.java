@@ -49,8 +49,8 @@ public class NotificationFormController {
     @RequestMapping(method = RequestMethod.POST)
     public void save(final @RequestBody Map<String, Object> request) throws IOException {
         String recipientUuid = request.get("recipient").toString();
-        String subject = request.get("subject").toString();
-        String payload = request.get("payload").toString();
+        String subject = String.valueOf(request.get("subject"));
+        String payload = String.valueOf(request.get("payload"));
 
         DataService service = Context.getService(DataService.class);
         Person sender = Context.getAuthenticatedUser().getPerson();
