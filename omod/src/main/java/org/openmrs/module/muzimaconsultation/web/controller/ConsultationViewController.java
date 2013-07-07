@@ -27,11 +27,11 @@ import org.springframework.web.bind.annotation.RequestMethod;
  * The main controller.
  */
 @Controller
-@RequestMapping(value = "/module/muzimaconsultation/consultations")
-public class ConsultationsController {
+@RequestMapping(value = "/module/muzimaconsultation/view.list")
+public class ConsultationViewController {
 
 	@RequestMapping(method = RequestMethod.GET)
-	public void manage() {
+	public void view() {
         // nothing to prepare for this page
 	}
 }
