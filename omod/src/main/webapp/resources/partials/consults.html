@@ -27,8 +27,8 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr ng-repeat="notification in notifications | filter:search | orderBy:'datetime':true">
-                        <td><a href="#/consult/{{notification.uuid}}">{{$index + 1}}</a></td>
+                    <tr ng-repeat="notification in notifications | orderBy:'datetime':true">
+                        <td><a href="#/consult/{{notification.uuid}}">{{(currentPage - 1) * maxSize + $index + 1}}</a></td>
                         <td>{{notification.sender.name}}</td>
                         <td>{{notification.recipient.name}}</td>
                         <td>{{notification.subject}}</td>
@@ -36,6 +36,11 @@
                     </tr>
                     </tbody>
                 </table>
+            </div>
+            <div ng-show="noOfPages > 1" class="row">
+                <div class="span12 pull-left">
+                    <pagination num-pages="noOfPages" current-page="currentPage" max-size="maxSize" boundary-links="true"></pagination>
+                </div>
             </div>
         </div>
     </div>

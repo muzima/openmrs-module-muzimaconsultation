@@ -51,36 +51,70 @@ function EditConsultationCtrl($scope, $location, $routeParams, $person, $notific
             $scope.sender = notification.sender.name;
             $scope.recipient = notification.recipient.name;
         }
-    }
+        $scope.subject = "Re: " + notification.subject;
 
-    $scope.send = function (compose) {
+    };
+
+    $scope.send = function (subject, payload) {
         // save action
-        var recipient = $scope.notification.sender.uuid;
+        var recipient = $scope.notification.recipient.uuid;
         if ($scope.outgoing) {
-            recipient = $scope.notification.recipient.uuid;
+            recipient = $scope.notification.sender.uuid;
         }
 
-        $notification.sendNotification(recipient, compose.subject, compose.payload).
+        $notification.sendNotification(recipient, subject, payload).
             then(function () {
                 $location.path('/consults/true');
             });
-    }
+    };
 
     $scope.cancel = function () {
         $location.path('/consults/true');
-    }
+    };
 }
 
 function ListConsultationsCtrl($scope, $routeParams, $person, $notifications) {
+    $scope.maxSize = 5;
+    $scope.pageSize = 5;
+    $scope.currentPage = 1;
     $scope.outgoing = $routeParams.outgoing;
     $person.getAuthenticatedPerson().
         then(function (response) {
-            return response.data;
+            $scope.person = response.data;
+            return $scope.person;
         }).
         then(function (person) {
-            $notifications.getNotifications(person.uuid, $scope.outgoing).
+            $notifications.getNotifications(person.uuid, $scope.outgoing,
+                    $scope.search, $scope.currentPage, $scope.pageSize).
                 then(function (response) {
-                    $scope.notifications = response.data;
+                    var serverData = response.data;
+                    $scope.notifications = serverData.objects;
+                    $scope.noOfPages = serverData.pages;
                 });
         });
+
+    $scope.$watch('currentPage', function (newValue, oldValue) {
+        if (newValue != oldValue) {
+            $notifications.getNotifications($scope.person.uuid, $scope.outgoing,
+                    $scope.search, $scope.currentPage, $scope.pageSize).
+                then(function (response) {
+                    var serverData = response.data;
+                    $scope.notifications = serverData.objects;
+                    $scope.noOfPages = serverData.pages;
+                });
+        }
+    }, true);
+
+    $scope.$watch('search', function (newValue, oldValue) {
+        if (newValue != oldValue) {
+            $scope.currentPage = 1;
+            $notifications.getNotifications($scope.person.uuid, $scope.outgoing,
+                    $scope.search, $scope.currentPage, $scope.pageSize).
+                then(function (response) {
+                    var serverData = response.data;
+                    $scope.notifications = serverData.objects;
+                    $scope.noOfPages = serverData.pages;
+                });
+        }
+    }, true);
 }

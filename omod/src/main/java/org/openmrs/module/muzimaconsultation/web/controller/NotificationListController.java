@@ -29,7 +29,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * TODO: Write brief description about the class here.
@@ -40,24 +42,31 @@ public class NotificationListController {
 
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
-    public List<Object> getNotificationsFor(final @RequestParam(value = "uuid", required = true) String uuid,
-                                            final @RequestParam(value = "sender", required = true) boolean sender) {
-        List<Object> response = new ArrayList<Object>();
-
+    public Map<String, Object> getNotificationsFor(final @RequestParam(value = "uuid", required = true) String uuid,
+                                            final @RequestParam(value = "sender", required = true) boolean sender,
+                                            final @RequestParam(value = "search") String search,
+                                            final @RequestParam(value = "pageNumber") Integer pageNumber,
+                                            final @RequestParam(value = "pageSize") Integer pageSize) {
+        Map<String, Object> response = new HashMap<String, Object>();
         Person person = Context.getPersonService().getPersonByUuid(uuid);
         DataService service = Context.getService(DataService.class);
 
+        Integer pages;
         List<NotificationData> notificationDataList;
         if (sender) {
-            notificationDataList = service.getNotificationDataBySender(person);
+            pages = (service.countNotificationDataBySender(person, search) + pageSize - 1) / pageSize;
+            notificationDataList = service.getNotificationDataBySender(person, search, pageNumber, pageSize);
         } else {
-            notificationDataList = service.getNotificationDataByReceiver(person);
+            pages = (service.countNotificationDataByReceiver(person, search) + pageSize - 1) / pageSize;
+            notificationDataList = service.getNotificationDataByReceiver(person, search, pageNumber, pageSize);
         }
 
+        List<Object> objects = new ArrayList<Object>();
         for (NotificationData notificationData : notificationDataList) {
-            response.add(NotificationDataConverter.convert(notificationData));
+            objects.add(NotificationDataConverter.convert(notificationData));
         }
-
+        response.put("pages", pages);
+        response.put("objects", objects);
         return response;
     }
 }
