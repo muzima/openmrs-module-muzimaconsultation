@@ -38,7 +38,7 @@ import java.util.Map;
  */
 @Controller
 @RequestMapping(value = "module/muzimaconsultation/notifications.json")
-public class NotificationListController {
+public class NotificationsController {
 
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
