@@ -92,16 +92,9 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
         String encounterDatetime = JsonPath.read(payload, "$['encounter']['datetime']");
         encounter.setEncounterDatetime(parseDate(encounterDatetime));
 
-        Encounter savedEncounter = Context.getEncounterService().saveEncounter(encounter);
-
-        List<Obs> obsList = new ArrayList<Obs>();
         List<Object> obsObjects = JsonPath.read(payload, "$['obs']");
         for (Object obsObject : obsObjects) {
             Obs obs = new Obs();
-            obs.setEncounter(savedEncounter);
-            obs.setPerson(savedEncounter.getPatient());
-            obs.setLocation(savedEncounter.getLocation());
-            obs.setObsDatetime(savedEncounter.getEncounterDatetime());
 
             obs.setUuid(UUID.randomUUID().toString());
             obs.setCreator(Context.getAuthenticatedUser());
@@ -124,18 +117,15 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
             } else if (concept.getDatatype().isText()) {
                 obs.setValueText(value);
             } else if (concept.getDatatype().isComplex()) {
-                byte[] bytes = Base64.decode(value);
-                String uniqueComplexName = UUID.randomUUID().toString() + ".jpg";
-                InputStream inputStream = new ByteArrayInputStream(bytes);
+                String uniqueComplexName = UUID.randomUUID().toString();
+                InputStream inputStream = new ByteArrayInputStream(value.getBytes());
                 ComplexData complexData = new ComplexData(uniqueComplexName, inputStream);
                 obs.setComplexData(complexData);
             }
-            obsList.add(obs);
+            encounter.addObs(obs);
         }
 
-        for (Obs obs : obsList) {
-            Context.getObsService().saveObs(obs, null);
-        }
+        Context.getEncounterService().saveEncounter(encounter);
     }
 
     private Date parseDate(final String dateValue) {
