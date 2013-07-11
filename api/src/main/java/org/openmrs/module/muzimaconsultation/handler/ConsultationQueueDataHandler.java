@@ -27,6 +27,7 @@ import org.openmrs.Obs;
 import org.openmrs.Patient;
 import org.openmrs.User;
 import org.openmrs.annotation.Handler;
+import org.openmrs.api.AdministrationService;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.muzima.api.service.DataService;
 import org.openmrs.module.muzima.exception.QueueProcessorException;
@@ -34,15 +35,20 @@ import org.openmrs.module.muzima.model.NotificationData;
 import org.openmrs.module.muzima.model.QueueData;
 import org.openmrs.module.muzima.model.handler.QueueDataHandler;
 import org.openmrs.obs.ComplexData;
+import org.openmrs.util.OpenmrsConstants;
+import org.openmrs.util.OpenmrsUtil;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 /**
  */
@@ -86,9 +92,20 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
         String encounterDatetime = JsonPath.read(payload, "$['encounter']['datetime']");
         encounter.setEncounterDatetime(parseDate(encounterDatetime));
 
+        Encounter savedEncounter = Context.getEncounterService().saveEncounter(encounter);
+
+        List<Obs> obsList = new ArrayList<Obs>();
         List<Object> obsObjects = JsonPath.read(payload, "$['obs']");
         for (Object obsObject : obsObjects) {
             Obs obs = new Obs();
+            obs.setEncounter(savedEncounter);
+            obs.setPerson(savedEncounter.getPatient());
+            obs.setLocation(savedEncounter.getLocation());
+            obs.setObsDatetime(savedEncounter.getEncounterDatetime());
+
+            obs.setUuid(UUID.randomUUID().toString());
+            obs.setCreator(Context.getAuthenticatedUser());
+            obs.setDateCreated(new Date());
 
             String conceptUuid = JsonPath.read(obsObject, "$['uuid']");
             Concept concept = Context.getConceptService().getConceptByUuid(conceptUuid);
@@ -108,17 +125,17 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
                 obs.setValueText(value);
             } else if (concept.getDatatype().isComplex()) {
                 byte[] bytes = Base64.decode(value);
+                String uniqueComplexName = UUID.randomUUID().toString() + ".jpg";
                 InputStream inputStream = new ByteArrayInputStream(bytes);
-                ComplexData complexData = new ComplexData("ImageData", inputStream);
+                ComplexData complexData = new ComplexData(uniqueComplexName, inputStream);
                 obs.setComplexData(complexData);
             }
-            encounter.addObs(obs);
+            obsList.add(obs);
         }
 
-        Context.getEncounterService().saveEncounter(encounter);
-
-        NotificationData notificationData = new NotificationData();
-        Context.getService(DataService.class).saveNotificationData(notificationData);
+        for (Obs obs : obsList) {
+            Context.getObsService().saveObs(obs, null);
+        }
     }
 
     private Date parseDate(final String dateValue) {
