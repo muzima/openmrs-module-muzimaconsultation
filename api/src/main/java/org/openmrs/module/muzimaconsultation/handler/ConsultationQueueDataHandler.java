@@ -50,7 +50,7 @@ import java.util.List;
 @Handler(supports = QueueData.class, order = 50)
 public class ConsultationQueueDataHandler implements QueueDataHandler {
 
-    private static final String DISCRIMINATOR_VALUE = "encounter";
+    private static final String DISCRIMINATOR_VALUE = "consultation";
 
     private static final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
