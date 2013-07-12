@@ -50,10 +50,10 @@ public class NotificationsController {
         Integer pages;
         List<NotificationData> notificationDataList;
         if (sender) {
-            pages = (service.countNotificationDataBySender(person, search) + pageSize - 1) / pageSize;
+            pages = (service.countNotificationDataBySender(person, search).intValue() + pageSize - 1) / pageSize;
             notificationDataList = service.getNotificationDataBySender(person, search, pageNumber, pageSize);
         } else {
-            pages = (service.countNotificationDataByReceiver(person, search) + pageSize - 1) / pageSize;
+            pages = (service.countNotificationDataByReceiver(person, search).intValue() + pageSize - 1) / pageSize;
             notificationDataList = service.getNotificationDataByReceiver(person, search, pageNumber, pageSize);
         }
 
