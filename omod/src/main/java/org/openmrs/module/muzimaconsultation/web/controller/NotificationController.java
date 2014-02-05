@@ -45,6 +45,8 @@ public class NotificationController {
     @RequestMapping(method = RequestMethod.POST)
     public void save(final @RequestBody Map<String, Object> request) throws IOException {
         String recipientUuid = request.get("recipient").toString();
+        String status = String.valueOf(request.get("status"));
+        String source = String.valueOf(request.get("source"));
         String subject = String.valueOf(request.get("subject"));
         String payload = String.valueOf(request.get("payload"));
 
@@ -54,6 +56,8 @@ public class NotificationController {
         NotificationData notificationData = new NotificationData();
         notificationData.setPayload(payload);
         notificationData.setSubject(subject);
+        notificationData.setStatus("New");
+        notificationData.setSource(source);
         notificationData.setSender(sender);
         notificationData.setReceiver(recipient);
         service.saveNotificationData(notificationData);

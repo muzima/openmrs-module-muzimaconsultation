@@ -34,6 +34,8 @@ public class NotificationDataConverter {
         if (notificationData != null) {
             converted.put("uuid", notificationData.getUuid());
             converted.put("payload", notificationData.getPayload());
+            converted.put("status", notificationData.getStatus());
+            converted.put("source", notificationData.getSource());
             converted.put("subject", notificationData.getSubject());
 
             Person sender = notificationData.getSender();

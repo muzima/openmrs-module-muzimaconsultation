@@ -15,7 +15,7 @@ function CreateConsultationCtrl($scope, $location, $person, $notification) {
     $scope.send = function (compose) {
         // send action
         var recipient = compose.recipient.uuid;
-        $notification.sendNotification(recipient, compose.subject, compose.payload).
+        $notification.sendNotification(recipient, compose.subject, compose.source, compose.payload).
             then(function () {
                 $location.path('/consults/true');
             });
@@ -51,18 +51,19 @@ function EditConsultationCtrl($scope, $location, $routeParams, $person, $notific
             $scope.sender = notification.sender.name;
             $scope.recipient = notification.recipient.name;
         }
+        $scope.source = notification.source;
         $scope.subject = "Re: " + notification.subject;
 
     };
 
-    $scope.send = function (subject, payload) {
+    $scope.send = function (subject, source, payload) {
         // save action
         var recipient = $scope.notification.recipient.uuid;
         if ($scope.outgoing) {
             recipient = $scope.notification.sender.uuid;
         }
 
-        $notification.sendNotification(recipient, subject, payload).
+        $notification.sendNotification(recipient, subject, source, payload).
             then(function () {
                 $location.path('/consults/true');
             });
