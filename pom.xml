@@ -56,15 +56,9 @@
             <!-- Begin OpenMRS modules -->
             <dependency>
                 <groupId>org.openmrs.module</groupId>
-                <artifactId>muzima-api</artifactId>
+                <artifactId>muzima-omod</artifactId>
                 <version>${muzimaVersion}</version>
                 <scope>provided</scope>
-            </dependency>
-            <dependency>
-                <groupId>net.minidev</groupId>
-                <artifactId>json-smart</artifactId>
-                <version>${minidevVersion}</version>
-                <scope>test</scope>
             </dependency>
             <!-- End OpenMRS modules -->
 

@@ -28,10 +28,10 @@
 			<artifactId>${project.parent.artifactId}-api</artifactId>
 			<version>${project.parent.version}</version>
 		</dependency>
-		<dependency>
-			<groupId>org.openmrs.module</groupId>
-			<artifactId>muzima-api</artifactId>
-		</dependency>
+        <dependency>
+            <groupId>org.openmrs.module</groupId>
+            <artifactId>muzima-omod</artifactId>
+        </dependency>
 		<!-- End OpenMRS modules -->
 
 		<!-- Begin OpenMRS core -->
