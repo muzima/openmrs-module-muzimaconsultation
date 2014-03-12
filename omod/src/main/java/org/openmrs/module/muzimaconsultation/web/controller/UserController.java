@@ -15,6 +15,7 @@ package org.openmrs.module.muzimaconsultation.web.controller;
 
 import org.apache.commons.lang.StringUtils;
 import org.openmrs.Person;
+import org.openmrs.Role;
 import org.openmrs.User;
 import org.openmrs.api.UserService;
 import org.openmrs.api.context.Context;
@@ -64,6 +65,24 @@ public class UserController {
         Person person = user.getPerson();
         response.put("uuid", person.getUuid());
         response.put("name", person.getPersonName().getFullName());
+        return response;
+    }
+
+    @RequestMapping(value = "/module/muzimaconsultation/roles.json", method = RequestMethod.GET)
+    @ResponseBody
+    public List<Object> getAllRoles() {
+        User authenticatedUser = Context.getAuthenticatedUser();
+        List<Object> objects = new ArrayList<Object>();
+        for (Role role : authenticatedUser.getAllRoles()) {
+            objects.add(converRole(role));
+        }
+        return objects;
+    }
+
+    private Map<String, Object> converRole(final Role role) {
+        Map<String, Object> response = new HashMap<String, Object>();
+        response.put("uuid", role.getUuid());
+        response.put("name", role.getName());
         return response;
     }
 }

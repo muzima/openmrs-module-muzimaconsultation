@@ -14,6 +14,8 @@
 package org.openmrs.module.muzimaconsultation.web.controller;
 
 import org.openmrs.Person;
+import org.openmrs.Role;
+import org.openmrs.User;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.muzima.api.service.DataService;
 import org.openmrs.module.muzima.model.NotificationData;
@@ -28,6 +30,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * TODO: Write brief description about the class here.
@@ -39,20 +42,27 @@ public class NotificationsController {
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
     public Map<String, Object> getNotificationsFor(final @RequestParam(value = "uuid", required = true) String uuid,
-                                            final @RequestParam(value = "sender", required = true) boolean sender,
-                                            final @RequestParam(value = "search") String search,
-                                            final @RequestParam(value = "pageNumber") Integer pageNumber,
-                                            final @RequestParam(value = "pageSize") Integer pageSize) {
+                                                   final @RequestParam(value = "sender", required = true) boolean sender,
+                                                   final @RequestParam(value = "search") String search,
+                                                   final @RequestParam(value = "pageNumber") Integer pageNumber,
+                                                   final @RequestParam(value = "pageSize") Integer pageSize) {
         Map<String, Object> response = new HashMap<String, Object>();
         Person person = Context.getPersonService().getPersonByUuid(uuid);
         DataService service = Context.getService(DataService.class);
 
         Integer pages;
         List<NotificationData> notificationDataList;
-        if (sender) {
-            pages = (service.countNotificationDataBySender(person, search).intValue() + pageSize - 1) / pageSize;
-            notificationDataList = service.getNotificationDataBySender(person, search, pageNumber, pageSize);
+        if (person != null) {
+            if (sender) {
+                pages = (service.countNotificationDataBySender(person, search).intValue() + pageSize - 1) / pageSize;
+                notificationDataList = service.getNotificationDataBySender(person, search, pageNumber, pageSize);
+            } else {
+                pages = (service.countNotificationDataByReceiver(person, search).intValue() + pageSize - 1) / pageSize;
+                notificationDataList = service.getNotificationDataByReceiver(person, search, pageNumber, pageSize);
+            }
         } else {
+            User user = Context.getAuthenticatedUser();
+            Set<Role> roles = user.getRoles();
             pages = (service.countNotificationDataByReceiver(person, search).intValue() + pageSize - 1) / pageSize;
             notificationDataList = service.getNotificationDataByReceiver(person, search, pageNumber, pageSize);
         }
