@@ -42,18 +42,19 @@ public class NotificationsController {
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
     public Map<String, Object> getNotificationsFor(final @RequestParam(value = "uuid", required = true) String uuid,
-                                                   final @RequestParam(value = "sender", required = true) boolean sender,
+                                                   final @RequestParam(value = "outgoing", required = true) boolean outgoing,
+                                                   final @RequestParam(value = "role", required = true) boolean roleBased,
                                                    final @RequestParam(value = "search") String search,
                                                    final @RequestParam(value = "pageNumber") Integer pageNumber,
                                                    final @RequestParam(value = "pageSize") Integer pageSize) {
         Map<String, Object> response = new HashMap<String, Object>();
-        Person person = Context.getPersonService().getPersonByUuid(uuid);
         DataService service = Context.getService(DataService.class);
 
         Integer pages;
         List<NotificationData> notificationDataList;
-        if (person != null) {
-            if (sender) {
+        if (!roleBased) {
+            Person person = Context.getPersonService().getPersonByUuid(uuid);
+            if (outgoing) {
                 pages = (service.countNotificationDataBySender(person, search).intValue() + pageSize - 1) / pageSize;
                 notificationDataList = service.getNotificationDataBySender(person, search, pageNumber, pageSize);
             } else {
@@ -61,10 +62,9 @@ public class NotificationsController {
                 notificationDataList = service.getNotificationDataByReceiver(person, search, pageNumber, pageSize);
             }
         } else {
-            User user = Context.getAuthenticatedUser();
-            Set<Role> roles = user.getRoles();
-            pages = (service.countNotificationDataByReceiver(person, search).intValue() + pageSize - 1) / pageSize;
-            notificationDataList = service.getNotificationDataByReceiver(person, search, pageNumber, pageSize);
+            Role role = Context.getUserService().getRoleByUuid(uuid);
+            pages = (service.countNotificationDataByRole(role, search).intValue() + pageSize - 1) / pageSize;
+            notificationDataList = service.getNotificationDataByRole(role, search, pageNumber, pageSize);
         }
 
         List<Object> objects = new ArrayList<Object>();

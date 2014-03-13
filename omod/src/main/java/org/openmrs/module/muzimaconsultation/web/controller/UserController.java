@@ -82,7 +82,7 @@ public class UserController {
     private Map<String, Object> converRole(final Role role) {
         Map<String, Object> response = new HashMap<String, Object>();
         response.put("uuid", role.getUuid());
-        response.put("name", role.getName());
+        response.put("name", role.getRole());
         return response;
     }
 }

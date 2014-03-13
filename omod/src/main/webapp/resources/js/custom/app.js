@@ -44,12 +44,17 @@ muzimaconsultation.factory('$notification', function ($http) {
 
 
 muzimaconsultation.factory('$notifications', function ($http) {
-    var getNotifications = function (uuid, mode, search, pageNumber, pageSize) {
+    var getNotifications = function (uuid, outgoing, role, search, pageNumber, pageSize) {
         if (search === undefined) {
             search = '';
         }
-        return $http.get('notifications.json?uuid=' + uuid + '&sender=' + mode + "&search=" + search
-            + "&pageNumber=" + pageNumber + "&pageSize=" + pageSize);
+        return $http.get('notifications.json?'
+            + 'uuid=' + uuid
+            + '&outgoing=' + outgoing
+            + '&role=' + role
+            + "&search=" + search
+            + "&pageNumber=" + pageNumber
+            + "&pageSize=" + pageSize);
     };
     return {
         getNotifications: getNotifications

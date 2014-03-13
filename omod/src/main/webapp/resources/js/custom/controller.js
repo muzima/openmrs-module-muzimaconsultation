@@ -179,24 +179,50 @@ function ListConsultationsCtrl($scope, $routeParams, $person, $notifications) {
         }
     };
 
-    $person.getAuthenticatedPerson().
-        then(function (response) {
-            $scope.person = response.data;
-            return $scope.person;
-        }).
-        then(function (person) {
-            $notifications.getNotifications(person.uuid, $scope.outgoing,
+    $scope.uuid = "";
+    $scope.selectedRole = {};
+
+    $person.getAllRoles().
+        then(function(response) {
+            console.log(response.data);
+            $scope.roles = response.data;
+            if ($scope.roles.length > 1) {
+                $scope.selectedRole = $scope.roles[0];
+            }
+        });
+
+    if ($scope.role === 'true') {
+        $scope.roleSelected = function() {
+            $scope.uuid = $scope.selectedRole.uuid;
+            $notifications.getNotifications($scope.uuid, $scope.outgoing, $scope.role,
                     $scope.search, $scope.currentPage, $scope.pageSize).
                 then(function (response) {
                     var serverData = response.data;
                     $scope.notifications = serverData.objects;
                     $scope.noOfPages = serverData.pages;
                 });
-        });
+
+        };
+    } else {
+        $person.getAuthenticatedPerson().
+            then(function (response) {
+                $scope.person = response.data;
+                $scope.uuid = $scope.person.uuid;
+            }).
+            then(function () {
+                $notifications.getNotifications($scope.uuid, $scope.outgoing, $scope.role,
+                        $scope.search, $scope.currentPage, $scope.pageSize).
+                    then(function (response) {
+                        var serverData = response.data;
+                        $scope.notifications = serverData.objects;
+                        $scope.noOfPages = serverData.pages;
+                    });
+            });
+    }
 
     $scope.$watch('currentPage', function (newValue, oldValue) {
         if (newValue != oldValue) {
-            $notifications.getNotifications($scope.person.uuid, $scope.outgoing,
+            $notifications.getNotifications($scope.uuid, $scope.outgoing, $scope.role,
                     $scope.search, $scope.currentPage, $scope.pageSize).
                 then(function (response) {
                     var serverData = response.data;
@@ -209,7 +235,7 @@ function ListConsultationsCtrl($scope, $routeParams, $person, $notifications) {
     $scope.$watch('search', function (newValue, oldValue) {
         if (newValue != oldValue) {
             $scope.currentPage = 1;
-            $notifications.getNotifications($scope.person.uuid, $scope.outgoing,
+            $notifications.getNotifications($scope.uuid, $scope.outgoing, $scope.role,
                     $scope.search, $scope.currentPage, $scope.pageSize).
                 then(function (response) {
                     var serverData = response.data;
