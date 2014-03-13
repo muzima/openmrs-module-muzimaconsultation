@@ -14,6 +14,7 @@
 package org.openmrs.module.muzimaconsultation.web.controller;
 
 import org.openmrs.Person;
+import org.openmrs.Role;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.muzima.api.service.DataService;
 import org.openmrs.module.muzima.model.NotificationData;
@@ -44,7 +45,8 @@ public class NotificationController {
 
     @RequestMapping(method = RequestMethod.POST)
     public void save(final @RequestBody Map<String, Object> request) throws IOException {
-        String recipientUuid = request.get("recipient").toString();
+        String recipientUuid = String.valueOf(request.get("recipient"));
+        String roleUuid = String.valueOf(request.get("role"));
         String status = String.valueOf(request.get("status"));
         String source = String.valueOf(request.get("source"));
         String subject = String.valueOf(request.get("subject"));
@@ -53,10 +55,12 @@ public class NotificationController {
         DataService service = Context.getService(DataService.class);
         Person sender = Context.getAuthenticatedUser().getPerson();
         Person recipient = Context.getPersonService().getPersonByUuid(recipientUuid);
+        Role role = Context.getUserService().getRoleByUuid(roleUuid);
         NotificationData notificationData = new NotificationData();
+        notificationData.setRole(role);
         notificationData.setPayload(payload);
         notificationData.setSubject(subject);
-        notificationData.setStatus("New");
+        notificationData.setStatus(status);
         notificationData.setSource(source);
         notificationData.setSender(sender);
         notificationData.setReceiver(recipient);

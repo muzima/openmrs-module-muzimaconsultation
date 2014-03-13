@@ -16,6 +16,7 @@ package org.openmrs.module.muzimaconsultation.web.utils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.openmrs.Person;
+import org.openmrs.Role;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.muzima.model.NotificationData;
 
@@ -45,10 +46,20 @@ public class NotificationDataConverter {
             converted.put("sender", senderObject);
 
             Person recipient = notificationData.getReceiver();
-            Map<String, Object> recipientObject = new HashMap<String, Object>();
-            recipientObject.put("uuid", recipient.getUuid());
-            recipientObject.put("name", recipient.getPersonName().getFullName());
-            converted.put("recipient", recipientObject);
+            if (recipient != null) {
+                Map<String, Object> recipientObject = new HashMap<String, Object>();
+                recipientObject.put("uuid", recipient.getUuid());
+                recipientObject.put("name", recipient.getPersonName().getFullName());
+                converted.put("recipient", recipientObject);
+            }
+
+            Role role = notificationData.getRole();
+            if (role != null) {
+                Map<String, Object> roleObject = new HashMap<String, Object>();
+                roleObject.put("uuid", role.getUuid());
+                roleObject.put("name", role.getRole());
+                converted.put("role", roleObject);
+            }
 
             String datetime = Context.getDateFormat().format(notificationData.getDateCreated());
             converted.put("datetime", datetime);

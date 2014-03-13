@@ -6,6 +6,16 @@ function CreateConsultationCtrl($scope, $location, $person, $notification) {
         then(function (response) {
             $scope.persons = response.data;
         });
+
+    $person.getAllRoles().
+        then(function(response) {
+            console.log(response.data);
+            $scope.roles = response.data;
+            if ($scope.roles.length > 1) {
+                $scope.selectedRole = $scope.roles[0];
+            }
+        });
+
     $person.getAuthenticatedPerson().
         then(function (response) {
             $scope.sender = response.data.name;
@@ -15,14 +25,15 @@ function CreateConsultationCtrl($scope, $location, $person, $notification) {
     $scope.send = function (compose) {
         // send action
         var recipient = compose.recipient.uuid;
-        $notification.sendNotification(recipient, compose.subject, compose.source, compose.payload).
+        var recipientRole = compose.role.uuid;
+        $notification.sendNotification(recipient, recipientRole, compose.subject, compose.source, compose.payload).
             then(function () {
-                $location.path('/consults/true');
+                $location.path('/consults/outgoing/false/role/false');
             });
     }
 
     $scope.cancel = function () {
-        $location.path('/consults/true');
+        $location.path('/consults/outgoing/false/role/false');
     };
 }
 
@@ -58,19 +69,29 @@ function EditConsultationCtrl($scope, $location, $routeParams, $person, $notific
 
     $scope.send = function (subject, source, payload) {
         // save action
+        var recipientRole = $scope.notification.role.uuid;
         var recipient = $scope.notification.recipient.uuid;
         if ($scope.outgoing) {
             recipient = $scope.notification.sender.uuid;
         }
 
-        $notification.sendNotification(recipient, subject, source, payload).
+        $notification.sendNotification(recipient, recipientRole, subject, source, payload).
             then(function () {
-                $location.path('/consults/true');
+                if (recipientRole === "") {
+                    $location.path('/consults/outgoing/true/role/false');
+                } else {
+                    $location.path('/consults/outgoing/true/role/true');
+                }
             });
     };
 
     $scope.cancel = function () {
-        $location.path('/consults/true');
+        var recipientRole = $scope.notification.role.uuid;
+        if (recipientRole === "") {
+            $location.path('/consults/outgoing/true/role/false');
+        } else {
+            $location.path('/consults/outgoing/true/role/true');
+        }
     };
 }
 
@@ -82,8 +103,12 @@ function ListConsultationsCtrl($scope, $routeParams, $person, $notifications) {
     $scope.role = $routeParams.role;
 
     $scope.standardNavigation = function(whichNavigation) {
+        // all of this can be simplified, if only the $scope.role and !$scope.role work properly.
+        // after some testing: when the $scope.role == true, then !$scope.role should be false, but !$scope.role == true.
+        // returning simple and / or operation on $scope.role and $scope.outgoing is not working here somehow.
         switch(whichNavigation) {
             case "incoming-user":
+                return $scope.role || $scope.outgoing;
                 if ($scope.role === 'true') {
                     return true;
                 } else{

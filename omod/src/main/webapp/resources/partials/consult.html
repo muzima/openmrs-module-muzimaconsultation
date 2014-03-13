@@ -5,6 +5,8 @@
             <li ng-show="mode == 'compose' || mode == 'reply'" class="navigation-active"><a href="#/newConsult">Compose</a></li>
             <li><a href="#/consults/outgoing/false/role/false">Incoming</a></li>
             <li><a href="#/consults/outgoing/true/role/false">Outgoing</a></li>
+            <li><a href="#/consults/outgoing/false/role/true">Incoming by Role</a></li>
+            <li><a href="#/consults/outgoing/true/role/true">Outgoing by Role</a></li>
         </ul>
     </div>
     <div class="span8">
@@ -21,6 +23,12 @@
                     <tr>
                         <td>To</td>
                         <td>{{notification.recipient.name}}</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td>Targeted Role</td>
+                        <td>{{notification.role.name}}</td>
                         <td>&nbsp;</td>
                         <td>&nbsp;</td>
                     </tr>
@@ -55,6 +63,11 @@
                             <input class="span10" placeholder="Recipient Name" type="text"
                                    ng-model="compose.recipient"
                                    typeahead="person as person.name for person in persons | filter:$viewValue">
+                        </div>
+                        <div>
+                            <input class="span10" placeholder="Targeted Role Name" type="text"
+                                   ng-model="compose.role"
+                                   typeahead="role as role.name for role in roles | filter:$viewValue">
                         </div>
                         <div>
                             <input class="span10" placeholder="Sender Name" type="text"
@@ -100,6 +113,12 @@
                         <td>&nbsp;</td>
                     </tr>
                     <tr>
+                        <td>Targeted Role</td>
+                        <td>{{notification.role.name}}</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                    </tr>
+                    <tr>
                         <td>Subject</td>
                         <td>{{notification.subject}}</td>
                         <td>&nbsp;</td>
@@ -125,6 +144,10 @@
                         <div>
                             <input class="span10" placeholder="Sender Name" type="text"
                                    ng-model="sender" disabled>
+                        </div>
+                        <div>
+                            <input class="span10" placeholder="Targeted Role Name" type="text"
+                                   ng-model="role" disabled>
                         </div>
                         <div>
                             <input class="span10" placeholder="Subject" type="text"
