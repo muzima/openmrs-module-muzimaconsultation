@@ -13,6 +13,7 @@
  */
 package org.openmrs.module.muzimaconsultation.web.controller;
 
+import org.apache.commons.lang.StringUtils;
 import org.openmrs.Person;
 import org.openmrs.Role;
 import org.openmrs.api.context.Context;
@@ -60,6 +61,9 @@ public class NotificationController {
         notificationData.setRole(role);
         notificationData.setPayload(payload);
         notificationData.setSubject(subject);
+        if (StringUtils.isEmpty(status)) {
+            status = "NEW";
+        }
         notificationData.setStatus(status);
         notificationData.setSource(source);
         notificationData.setSender(sender);
