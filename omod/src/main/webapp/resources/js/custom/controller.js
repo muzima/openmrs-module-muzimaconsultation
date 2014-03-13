@@ -84,7 +84,6 @@ function ListConsultationsCtrl($scope, $routeParams, $person, $notifications) {
     $scope.standardNavigation = function(whichNavigation) {
         switch(whichNavigation) {
             case "incoming-user":
-                // return $scope.role || $scope.outgoing;
                 if ($scope.role === 'true') {
                     return true;
                 } else{
@@ -96,7 +95,6 @@ function ListConsultationsCtrl($scope, $routeParams, $person, $notifications) {
                 }
                 break;
             case "outgoing-user":
-                // return $scope.role || !$scope.outgoing;
                 if ($scope.role === 'true') {
                     return true;
                 } else{
@@ -108,7 +106,6 @@ function ListConsultationsCtrl($scope, $routeParams, $person, $notifications) {
                 }
                 break;
             case "incoming-role":
-                // return !$scope.role || $scope.outgoing;
                 if ($scope.role === 'true') {
                     if ($scope.outgoing === 'true') {
                         return true;
@@ -120,7 +117,6 @@ function ListConsultationsCtrl($scope, $routeParams, $person, $notifications) {
                 }
                 break;
             case "outgoing-role":
-                // return !$scope.role || !$scope.outgoing;
                 if ($scope.role === 'true') {
                     if ($scope.outgoing === 'true') {
                         return false;
@@ -137,7 +133,6 @@ function ListConsultationsCtrl($scope, $routeParams, $person, $notifications) {
     $scope.selectedNavigation = function(whichNavigation) {
         switch(whichNavigation) {
             case "incoming-user":
-                // return !$scope.role && !$scope.outgoing;
                 if ($scope.role === 'true') {
                     return false;
                 } else{
@@ -149,7 +144,6 @@ function ListConsultationsCtrl($scope, $routeParams, $person, $notifications) {
                 }
                 break;
             case "outgoing-user":
-                // return !$scope.role && $scope.outgoing;
                 if ($scope.role === 'true') {
                     return false;
                 } else{
@@ -161,7 +155,6 @@ function ListConsultationsCtrl($scope, $routeParams, $person, $notifications) {
                 }
                 break;
             case "incoming-role":
-                // return $scope.role && !$scope.outgoing;
                 if ($scope.role === 'true') {
                     if ($scope.outgoing === 'true') {
                         return false;
@@ -173,7 +166,6 @@ function ListConsultationsCtrl($scope, $routeParams, $person, $notifications) {
                 }
                 break;
             case "outgoing-role":
-                // return $scope.role && $scope.outgoing;
                 if ($scope.role === 'true') {
                     if ($scope.outgoing === 'true') {
                         return true;

@@ -16,7 +16,7 @@
         <div class="clearfix">
             <div class="row">
                 <div class="span4 pull-left" ng-show="role">
-                    KLENG
+                    <select ng-model="selectedRole"  ng-options="role.name for role in roles | orderBy: 'name'"></select>
                 </div>
                 <div class="span4 pull-right">
                     <input type="text" ng-model="search" class="search-query search-query-size" />
