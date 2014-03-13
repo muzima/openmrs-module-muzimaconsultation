@@ -2,15 +2,22 @@
     <div class="span2">
         <ul class="nav nav-tabs nav-stacked">
             <li><a href="#/newConsult">Compose</a></li>
-            <li ng-hide="outgoing" class="navigation-active"><a href="#/consults/false">Incoming</a></li>
-            <li ng-show="outgoing"><a href="#/consults/false">Incoming</a></li>
-            <li ng-show="outgoing" class="navigation-active"><a href="#/consults/true">Outgoing</a></li>
-            <li ng-hide="outgoing"><a href="#/consults/true">Outgoing</a></li>
+            <li ng-show="standardNavigation('incoming-user')"><a href="#/consults/outgoing/false/role/false">Incoming</a></li>
+            <li ng-show="standardNavigation('outgoing-user')"><a href="#/consults/outgoing/true/role/false">Outgoing</a></li>
+            <li ng-show="standardNavigation('incoming-role')"><a href="#/consults/outgoing/false/role/true">Incoming by Role</a></li>
+            <li ng-show="standardNavigation('outgoing-role')"><a href="#/consults/outgoing/true/role/true">Outgoing by Role</a></li>
+            <li ng-show="selectedNavigation('incoming-user')" class="navigation-active"><a href="#/consults/outgoing/false/role/false">Incoming</a></li>
+            <li ng-show="selectedNavigation('outgoing-user')" class="navigation-active"><a href="#/consults/outgoing/true/role/false">Outgoing</a></li>
+            <li ng-show="selectedNavigation('incoming-role')" class="navigation-active"><a href="#/consults/outgoing/false/role/true">Incoming by Role</a></li>
+            <li ng-show="selectedNavigation('outgoing-role')" class="navigation-active"><a href="#/consults/outgoing/true/role/true">Outgoing by Role</a></li>
         </ul>
     </div>
     <div class="span8">
         <div class="clearfix">
             <div class="row">
+                <div class="span4 pull-left" ng-show="role">
+                    KLENG
+                </div>
                 <div class="span4 pull-right">
                     <input type="text" ng-model="search" class="search-query search-query-size" />
                 </div>

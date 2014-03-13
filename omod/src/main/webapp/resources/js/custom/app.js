@@ -3,25 +3,29 @@ var muzimaconsultation = angular.module('muzimaconsultation', ['ui.bootstrap']);
 muzimaconsultation.
     config(['$routeProvider', '$compileProvider', function ($routeProvider, $compileProvider) {
         $compileProvider.urlSanitizationWhitelist(/^\s*(https?|ftp|mailto|file):/);
-        $routeProvider.when('/consults/:outgoing', {controller: ListConsultationsCtrl,
+        $routeProvider.when('/consults/outgoing/:outgoing/role/:role', {controller: ListConsultationsCtrl,
             templateUrl: '../../moduleResources/muzimaconsultation/partials/consults.html'});
         $routeProvider.when('/consult/:uuid', {controller: EditConsultationCtrl,
             templateUrl: '../../moduleResources/muzimaconsultation/partials/consult.html'});
         $routeProvider.when('/newConsult', {controller: CreateConsultationCtrl,
             templateUrl: '../../moduleResources/muzimaconsultation/partials/consult.html'});
-        $routeProvider.otherwise({redirectTo: '/consults/false'});
+        $routeProvider.otherwise({redirectTo: '/consults/outgoing/false/role/false'});
     }]);
 
 muzimaconsultation.factory('$person', function($http) {
     var getAuthenticatedPerson = function() {
         return $http.get('authenticated.json');
     };
-    var getAllPerson = function() {
+    var getAllPersons = function() {
         return $http.get("users.json");
+    };
+    var getAllRoles = function() {
+        return $http.get("roles.json");
     };
     return {
         getAuthenticatedPerson: getAuthenticatedPerson,
-        getAllPerson: getAllPerson
+        getAllPersons: getAllPersons,
+        getAllRoles: getAllRoles
     }
 });
 

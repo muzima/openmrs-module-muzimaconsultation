@@ -2,7 +2,7 @@ function CreateConsultationCtrl($scope, $location, $person, $notification) {
     // initialize the page
     $scope.mode = "compose";
 
-    $person.getAllPerson().
+    $person.getAllPersons().
         then(function (response) {
             $scope.persons = response.data;
         });
@@ -79,6 +79,114 @@ function ListConsultationsCtrl($scope, $routeParams, $person, $notifications) {
     $scope.pageSize = 5;
     $scope.currentPage = 1;
     $scope.outgoing = $routeParams.outgoing;
+    $scope.role = $routeParams.role;
+
+    $scope.standardNavigation = function(whichNavigation) {
+        switch(whichNavigation) {
+            case "incoming-user":
+                // return $scope.role || $scope.outgoing;
+                if ($scope.role === 'true') {
+                    return true;
+                } else{
+                    if ($scope.outgoing === 'true') {
+                        return true;
+                    } else{
+                        return false;
+                    }
+                }
+                break;
+            case "outgoing-user":
+                // return $scope.role || !$scope.outgoing;
+                if ($scope.role === 'true') {
+                    return true;
+                } else{
+                    if ($scope.outgoing === 'true') {
+                        return false;
+                    } else{
+                        return true;
+                    }
+                }
+                break;
+            case "incoming-role":
+                // return !$scope.role || $scope.outgoing;
+                if ($scope.role === 'true') {
+                    if ($scope.outgoing === 'true') {
+                        return true;
+                    } else{
+                        return false;
+                    }
+                } else{
+                    return true;
+                }
+                break;
+            case "outgoing-role":
+                // return !$scope.role || !$scope.outgoing;
+                if ($scope.role === 'true') {
+                    if ($scope.outgoing === 'true') {
+                        return false;
+                    } else{
+                        return true;
+                    }
+                } else {
+                    return true;
+                }
+                break;
+        }
+    };
+
+    $scope.selectedNavigation = function(whichNavigation) {
+        switch(whichNavigation) {
+            case "incoming-user":
+                // return !$scope.role && !$scope.outgoing;
+                if ($scope.role === 'true') {
+                    return false;
+                } else{
+                    if ($scope.outgoing === 'true') {
+                        return false;
+                    } else {
+                        return true;
+                    }
+                }
+                break;
+            case "outgoing-user":
+                // return !$scope.role && $scope.outgoing;
+                if ($scope.role === 'true') {
+                    return false;
+                } else{
+                    if ($scope.outgoing === 'true') {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                }
+                break;
+            case "incoming-role":
+                // return $scope.role && !$scope.outgoing;
+                if ($scope.role === 'true') {
+                    if ($scope.outgoing === 'true') {
+                        return false;
+                    } else {
+                        return true;
+                    }
+                } else{
+                    return false;
+                }
+                break;
+            case "outgoing-role":
+                // return $scope.role && $scope.outgoing;
+                if ($scope.role === 'true') {
+                    if ($scope.outgoing === 'true') {
+                        return true;
+                    } else{
+                        return false;
+                    }
+                } else{
+                    return false;
+                }
+                break;
+        }
+    };
+
     $person.getAuthenticatedPerson().
         then(function (response) {
             $scope.person = response.data;
