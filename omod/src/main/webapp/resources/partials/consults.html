@@ -8,15 +8,13 @@
             <li ng-show="activeNav('outgoing-user')" class="navigation-active"><a href="#/consults/outgoing/true/role/false">Outgoing</a></li>
             <li ng-show="nav('incoming-role')"><a href="#/consults/outgoing/false/role/true">Incoming by Role</a></li>
             <li ng-show="activeNav('incoming-role')" class="navigation-active"><a href="#/consults/outgoing/false/role/true">Incoming by Role</a></li>
-            <li ng-show="nav('outgoing-role')"><a href="#/consults/outgoing/true/role/true">Outgoing by Role</a></li>
-            <li ng-show="activeNav('outgoing-role')" class="navigation-active"><a href="#/consults/outgoing/true/role/true">Outgoing by Role</a></li>
         </ul>
     </div>
     <div class="span8">
         <div class="clearfix">
             <div class="row">
                 <div class="span4 pull-left" ng-show="role">
-                    <select on-change="roleSelected" ng-model="selectedRole" ng-options="role.name for role in roles | orderBy: 'name'"></select>
+                    <select ng-change="roleSelected()" ng-model="selectedRole" ng-options="role.name for role in roles | orderBy: 'name'"></select>
                 </div>
                 <div class="span4 pull-right">
                     <input type="text" ng-model="search" class="search-query search-query-size" />
@@ -29,7 +27,7 @@
                         <th>#</th>
                         <th ng-show="activeNav('incoming-user')">Sender</th>
                         <th ng-show="activeNav('outgoing-user')">Receiver</th>
-                        <th ng-show="activeNav('incoming-role') || activeNav('outgoing-role')">Role</th>
+                        <th ng-show="activeNav('incoming-role') || activeNav('outgoing-role')">Targeted Role</th>
                         <th>Subject</th>
                         <th>Source</th>
                         <th>Date</th>
@@ -37,7 +35,7 @@
                     </thead>
                     <tbody>
                     <tr ng-repeat="notification in notifications | orderBy:'datetime':true">
-                        <td><a href="#/consult/{{notification.uuid}}">{{(currentPage - 1) * maxSize + $index + 1}}</a></td>
+                        <td><a href="#/consult/{{notification.uuid}}/outgoing/{{outgoing}}">{{(currentPage - 1) * maxSize + $index + 1}}</a></td>
                         <td ng-show="activeNav('incoming-user')">{{notification.sender.name}}</td>
                         <td ng-show="activeNav('outgoing-user')">{{notification.recipient.name}}</td>
                         <td ng-show="activeNav('incoming-role') || activeNav('outgoing-role')">{{notification.role.name}}</td>

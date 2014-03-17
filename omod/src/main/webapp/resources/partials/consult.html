@@ -6,7 +6,6 @@
             <li><a href="#/consults/outgoing/false/role/false">Incoming</a></li>
             <li><a href="#/consults/outgoing/true/role/false">Outgoing</a></li>
             <li><a href="#/consults/outgoing/false/role/true">Incoming by Role</a></li>
-            <li><a href="#/consults/outgoing/true/role/true">Outgoing by Role</a></li>
         </ul>
     </div>
     <div class="span8">
@@ -15,13 +14,13 @@
                 <table class="table">
                     <tbody>
                     <tr>
-                        <td>From</td>
+                        <td>Sender</td>
                         <td>{{notification.sender.name}}</td>
                         <td>&nbsp;</td>
                         <td>&nbsp;</td>
                     </tr>
                     <tr>
-                        <td>To</td>
+                        <td>Recipient</td>
                         <td>{{notification.recipient.name}}</td>
                         <td>&nbsp;</td>
                         <td>&nbsp;</td>
@@ -34,18 +33,18 @@
                     </tr>
                     <tr>
                         <td>Subject</td>
-                        <td>{{notification.subject}}</td>
+                        <td><span ng-bind-html-unsafe="notification.subject"></span></td>
                         <td>&nbsp;</td>
                         <td>&nbsp;</td>
                     </tr>
                     <tr>
                         <td>Source</td>
-                        <td>{{notification.source}}</td>
+                        <td><span ng-bind-html-unsafe="notification.source"></span></td>
                         <td>&nbsp;</td>
                         <td>&nbsp;</td>
                     </tr>
                     <tr>
-                        <td colspan="4">{{notification.payload}}</td>
+                        <td colspan="4"><span ng-bind-html-unsafe="notification.payload"></span></td>
                     </tr>
                     <tr>
                         <td colspan="4">
@@ -60,25 +59,30 @@
                 <form id="consult">
                     <div class="span5">
                         <div>
-                            <input class="span10" placeholder="Recipient Name" type="text"
+                            <label for="compose-sender"><strong>Sender</strong></label>
+                            <input id="compose-sender" class="span10" placeholder="Sender Name" type="text"
+                                   ng-model="sender" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label for="compose-recipient"><strong>Recipient</strong></label>
+                            <input id="compose-recipient" class="span10" placeholder="Recipient Name" type="text"
                                    ng-model="compose.recipient"
                                    typeahead="person as person.name for person in persons | filter:$viewValue">
                         </div>
                         <div>
-                            <input class="span10" placeholder="Targeted Role Name" type="text"
+                            <label for="compose-role"><strong>Targeted Role</strong></label>
+                            <input id="compose-role" class="span10" placeholder="Targeted Role Name" type="text"
                                    ng-model="compose.role"
                                    typeahead="role as role.name for role in roles | filter:$viewValue">
                         </div>
                         <div>
-                            <input class="span10" placeholder="Sender Name" type="text"
-                                   ng-model="sender" disabled>
-                        </div>
-                        <div>
-                            <input class="span10" placeholder="Subject" type="text"
+                            <label for="compose-subject"><strong>Subject</strong></label>
+                            <input id="compose-subject" class="span10" placeholder="Subject" type="text"
                                    ng-model="compose.subject">
                         </div>
                         <div>
-                            <input class="span10" placeholder="Source" type="text"
+                            <label for="compose-source"><strong>Source</strong></label>
+                            <input id="compose-source" class="span10" placeholder="Source" type="text"
                                    ng-model="compose.source">
                         </div>
                     </div>
@@ -101,13 +105,13 @@
                 <table class="table">
                     <tbody>
                     <tr>
-                        <td>From</td>
+                        <td>Sender</td>
                         <td>{{notification.sender.name}}</td>
                         <td>&nbsp;</td>
                         <td>&nbsp;</td>
                     </tr>
                     <tr>
-                        <td>To</td>
+                        <td>Recipient</td>
                         <td>{{notification.recipient.name}}</td>
                         <td>&nbsp;</td>
                         <td>&nbsp;</td>
@@ -120,49 +124,53 @@
                     </tr>
                     <tr>
                         <td>Subject</td>
-                        <td>{{notification.subject}}</td>
+                        <td><span ng-bind-html-unsafe="notification.subject"></span></td>
                         <td>&nbsp;</td>
                         <td>&nbsp;</td>
                     </tr>
                     <tr>
                         <td>Source</td>
-                        <td>{{notification.source}}</td>
+                        <td><span ng-bind-html-unsafe="notification.source"></span></td>
                         <td>&nbsp;</td>
                         <td>&nbsp;</td>
                     </tr>
                     <tr>
-                        <td colspan="4">{{notification.payload}}</td>
+                        <td colspan="4"><span ng-bind-html-unsafe="notification.payload"></span></td>
                     </tr>
                     </tbody>
                 </table>
                 <form id="reply-consult">
                     <div class="span5">
                         <div>
-                            <input class="span10" placeholder="Recipient Name" type="text"
-                                   ng-model="recipient" disabled>
-                        </div>
-                        <div>
-                            <input class="span10" placeholder="Sender Name" type="text"
+                            <label for="reply-sender"><strong>Sender</strong></label>
+                            <input id="reply-sender" class="span10" type="text"
                                    ng-model="sender" disabled>
                         </div>
                         <div>
-                            <input class="span10" placeholder="Targeted Role Name" type="text"
+                            <label for="reply-recipient"><strong>Recipient</strong></label>
+                            <input id="reply-recipient" class="span10" type="text"
+                                   ng-model="recipient" disabled>
+                        </div>
+                        <div>
+                            <label for="reply-role"><strong>Targeted Role</strong></label>
+                            <input id="reply-role" class="span10" type="text"
                                    ng-model="role" disabled>
                         </div>
                         <div>
-                            <input class="span10" placeholder="Subject" type="text"
+                            <label for="reply-subject"><strong>Subject</strong></label>
+                            <input id="reply-subject" class="span10" type="text"
                                    ng-model="subject" disabled>
                         </div>
                         <div>
-                            <input class="span10" placeholder="Source" type="text"
+                            <label for="reply-source"><strong>Source</strong></label>
+                            <input id="reply-source" class="span10" type="text"
                                    ng-model="source" disabled>
                         </div>
                     </div>
                     <!-- span4 -->
                     <div class="row-fluid">
                         <div class="span12">
-                            <textarea class="span12" placeholder="Type your questions here..." rows="10"
-                                      ng-model="payload">
+                            <textarea class="span12" placeholder="Type your answer here..." rows="10" ng-model="payload">
                             </textarea>
                             <button type="submit" ng-click="send(subject, source, payload)" class="btn">Send</button>
                             <button type="submit" ng-click="cancel()" class="btn">Cancel</button>

@@ -9,7 +9,6 @@ function CreateConsultationCtrl($scope, $location, $person, $notification) {
 
     $person.getAllRoles().
         then(function(response) {
-            console.log(response.data);
             $scope.roles = response.data;
             if ($scope.roles.length > 1) {
                 $scope.selectedRole = $scope.roles[0];
@@ -43,9 +42,10 @@ function CreateConsultationCtrl($scope, $location, $person, $notification) {
     };
 }
 
-function EditConsultationCtrl($scope, $location, $routeParams, $notification) {
+function EditConsultationCtrl($scope, $location, $person, $routeParams, $notification) {
     // initialize the page
     $scope.mode = "view";
+    $scope.outgoing = $routeParams.outgoing;
 
     // page parameter
     $scope.uuid = $routeParams.uuid;
@@ -62,15 +62,20 @@ function EditConsultationCtrl($scope, $location, $routeParams, $notification) {
         var notification = $scope.notification;
         // we're replying an incoming notification
         $scope.recipient = notification.sender.name;
-        $scope.sender = notification.recipient.name;
-        if ($scope.outgoing) {
-            // we're replying an outgoing notification
+        if (notification.recipient && notification.recipient !== 'undefined') {
+            $scope.sender = notification.recipient.name;
+        } else {
+            $person.getAuthenticatedPerson().
+                then(function (response) {
+                    $scope.sender = response.data.name;
+                });
+        }
+        if ($scope.outgoing === 'true') {
+            // we only have one outgoing type and all outgoing will have sender and recipient information
             $scope.sender = notification.sender.name;
             $scope.recipient = notification.recipient.name;
         }
-        if ($scope.role && $scope.role !== 'undefined') {
-            $scope.role = notification.role.name;
-        }
+
         $scope.source = notification.source;
         $scope.subject = "Re: " + notification.subject;
 
@@ -78,28 +83,23 @@ function EditConsultationCtrl($scope, $location, $routeParams, $notification) {
 
     $scope.send = function (subject, source, payload) {
         // save action
-        var recipientRole = $scope.notification.role.uuid;
-        var recipient = $scope.notification.recipient.uuid;
-        if ($scope.outgoing) {
-            recipient = $scope.notification.sender.uuid;
+        var recipient = $scope.notification.sender.uuid;
+        if ($scope.outgoing === 'true') {
+            recipient = $scope.notification.recipient.uuid;
         }
 
-        $notification.sendNotification(recipient, recipientRole, subject, source, payload).
+        $notification.sendNotification(recipient, null, subject, source, payload).
             then(function () {
-                if (recipientRole === "") {
-                    $location.path('/consults/outgoing/true/role/false');
-                } else {
-                    $location.path('/consults/outgoing/true/role/true');
-                }
+                $location.path('/consults/outgoing/false/role/false');
             });
     };
 
     $scope.cancel = function () {
-        var recipientRole = $scope.notification.role.uuid;
-        if (recipientRole === "") {
-            $location.path('/consults/outgoing/true/role/false');
+        var role = $scope.notification.role;
+        if (role && role !== 'undefined') {
+            $location.path('/consults/outgoing/false/role/true');
         } else {
-            $location.path('/consults/outgoing/true/role/true');
+            $location.path('/consults/outgoing/' + $scope.outgoing + '/role/false');
         }
     };
 }

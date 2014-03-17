@@ -15,6 +15,7 @@ package org.openmrs.module.muzimaconsultation.handler;
 
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.apache.commons.lang.time.DateUtils;
@@ -29,13 +30,18 @@ import org.openmrs.Obs;
 import org.openmrs.Patient;
 import org.openmrs.PatientIdentifier;
 import org.openmrs.PatientIdentifierType;
+import org.openmrs.Person;
 import org.openmrs.PersonName;
+import org.openmrs.Role;
 import org.openmrs.User;
 import org.openmrs.annotation.Handler;
+import org.openmrs.api.APIException;
 import org.openmrs.api.LocationService;
 import org.openmrs.api.PatientService;
 import org.openmrs.api.context.Context;
+import org.openmrs.module.muzima.api.service.DataService;
 import org.openmrs.module.muzima.exception.QueueProcessorException;
+import org.openmrs.module.muzima.model.NotificationData;
 import org.openmrs.module.muzima.model.QueueData;
 import org.openmrs.module.muzima.model.handler.QueueDataHandler;
 import org.openmrs.module.muzimaconsultation.utils.JsonUtils;
@@ -77,8 +83,57 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
 
         Object obsObject = JsonUtils.readAsObject(queueData.getPayload(), "$['observation']");
         processObs(encounter, null, obsObject);
-
         Context.getEncounterService().saveEncounter(encounter);
+
+        try {
+            Role role = null;
+            Person recipient = null;
+            Object consultationObject = JsonUtils.readAsObject(queueData.getPayload(), "$['consultation']");
+            String recipientString = JsonUtils.readAsString(String.valueOf(consultationObject), "$['recipient']");
+            String[] recipientParts = StringUtils.split(recipientString, ":");
+            if (ArrayUtils.getLength(recipientParts) == 2) {
+                if (StringUtils.equalsIgnoreCase(recipientParts[1], "u")) {
+                    User user = Context.getUserService().getUserByUsername(recipientParts[0]);
+                    recipient = user.getPerson();
+                } else if (StringUtils.equalsIgnoreCase(recipientParts[1], "g")) {
+                    role = Context.getUserService().getRole(recipientParts[0]);
+                }
+            }
+            generateNotification(encounter, recipient, role);
+        } catch (Exception e) {
+            String reason = "Unable to generate notification information. Rolling back encounter.";
+            Context.getEncounterService().voidEncounter(encounter, reason);
+            throw new QueueProcessorException(reason, e);
+        }
+    }
+
+    private void generateNotification(final Encounter encounter, final Person recipient, final Role role) {
+        Person sender = encounter.getProvider();
+        NotificationData notificationData = new NotificationData();
+        notificationData.setRole(role);
+
+        Patient patient = encounter.getPatient();
+        String patientName = patient.getPersonName().getFullName();
+        String senderName = sender.getPersonName().getFullName();
+        String recipientName = "User";
+        if (recipient != null) {
+            recipientName = recipient.getPersonName().getFullName();
+        } else if (role != null) {
+            recipientName = role.getRole();
+        }
+        String subject = "New Consultation on " + patientName + " by " + senderName;
+        notificationData.setSubject(subject);
+
+        notificationData.setPayload("Dear " + recipientName + ","
+                + "<br/>Please review the newly created consultation request for the following patient:"
+                + "<br/>Patient Name: " + patientName
+                + "<br/>Requested Information: " + encounter.getEncounterId());
+
+        notificationData.setStatus("NEW");
+        notificationData.setSource("Mobile Device");
+        notificationData.setSender(sender);
+        notificationData.setReceiver(recipient);
+        Context.getService(DataService.class).saveNotificationData(notificationData);
     }
 
     private void processPatient(final Encounter encounter, final Object patientObject) throws QueueProcessorException {
