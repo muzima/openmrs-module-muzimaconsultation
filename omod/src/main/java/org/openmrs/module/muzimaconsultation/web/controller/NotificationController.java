@@ -62,7 +62,7 @@ public class NotificationController {
         notificationData.setPayload(payload);
         notificationData.setSubject(subject);
         if (StringUtils.isEmpty(status)) {
-            status = "NEW";
+            status = "unread";
         }
         notificationData.setStatus(status);
         notificationData.setSource(source);
