@@ -46,7 +46,10 @@ import org.openmrs.module.muzima.model.QueueData;
 import org.openmrs.module.muzima.model.handler.QueueDataHandler;
 import org.openmrs.module.muzimaconsultation.utils.JsonUtils;
 import org.openmrs.obs.ComplexData;
+import org.openmrs.web.WebConstants;
+import org.openmrs.web.WebUtil;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.WebUtils;
 
 import javax.xml.bind.DatatypeConverter;
 import java.io.ByteArrayInputStream;
@@ -73,6 +76,10 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
     @Override
     public void process(final QueueData queueData) throws QueueProcessorException {
         log.info("Processing encounter form data: " + queueData.getUuid());
+        if (!Context.isSessionOpen()){
+            System.out.println("Session is not open");
+            return;
+        }
         Encounter encounter = new Encounter();
 
         Object encounterObject = JsonUtils.readAsObject(queueData.getPayload(), "$['encounter']");
@@ -99,17 +106,20 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
                     role = Context.getUserService().getRole(recipientParts[0]);
                 }
             }
-            generateNotification(encounter, recipient, role);
+            generateNotification(queueData.getUuid(), encounter, recipient, role);
         } catch (Exception e) {
+            e.printStackTrace();
             String reason = "Unable to generate notification information. Rolling back encounter.";
             Context.getEncounterService().voidEncounter(encounter, reason);
             throw new QueueProcessorException(reason, e);
         }
     }
 
-    private void generateNotification(final Encounter encounter, final Person recipient, final Role role) {
+    private void generateNotification(final String uuid, final Encounter encounter, final Person recipient, final Role role) {
         Person sender = encounter.getProvider();
         NotificationData notificationData = new NotificationData();
+        //persist queueData uuid to notification
+        notificationData.setUuid(uuid);
         notificationData.setRole(role);
 
         Patient patient = encounter.getPatient();
@@ -124,11 +134,12 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
         String subject = "New Consultation on " + patientName + " by " + senderName;
         notificationData.setSubject(subject);
 
-        notificationData.setPayload("Dear " + recipientName + ","
+        notificationData.setPayload("Dear " + recipientName + ",<br/>"
                 + "<br/>Please review the newly created consultation request for the following patient:"
                 + "<br/>Patient Name: " + patientName
-                + "<br/>Requested Information: " + encounter.getEncounterId());
-
+                + "<br/>Requested Information: "
+                + "<a href='/" + WebConstants.WEBAPP_NAME + "/admin/encounters/encounter.form?encounterId=" + encounter.getEncounterId() + "'>View Encounter</a>"
+        );
         notificationData.setStatus("unread");
         notificationData.setSource("Mobile Device");
         notificationData.setSender(sender);
@@ -316,10 +327,9 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
     private void processEncounter(final Encounter encounter, final Object encounterObject) throws QueueProcessorException {
         String encounterPayload = encounterObject.toString();
 
-        String formString = JsonUtils.readAsString(encounterPayload, "$['encounter.form_id']");
-        int formId = NumberUtils.toInt(formString, -999);
-        Form form = Context.getFormService().getForm(formId);
-        encounter.setForm(form);
+        String formString = JsonUtils.readAsString(encounterPayload, "$['encounter.form_uuid']");
+        Form form = Context.getFormService().getFormByUuid(formString);
+        encounter.setForm(form != null ? form : Context.getFormService().getForm(-999));
 
         String encounterTypeString = JsonUtils.readAsString(encounterPayload, "$['encounter.type_id']");
         int encounterTypeId = NumberUtils.toInt(encounterTypeString, 1);
