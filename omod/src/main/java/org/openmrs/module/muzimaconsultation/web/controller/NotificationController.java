@@ -41,6 +41,13 @@ public class NotificationController {
     @ResponseBody
     public Map<String, Object> getNotificationByUuid(final @RequestParam(required = true) String uuid) {
         DataService service = Context.getService(DataService.class);
+        NotificationData notificationData = service.getNotificationDataByUuid(uuid);
+        if (notificationData != null && notificationData.getStatus() != null){
+            if (notificationData.getStatus().equalsIgnoreCase("incoming")){
+                notificationData.setStatus("read");
+                service.saveNotificationData(notificationData);
+            }
+        }
         return NotificationDataConverter.convert(service.getNotificationDataByUuid(uuid));
     }
 
@@ -61,7 +68,7 @@ public class NotificationController {
         notificationData.setRole(role);
         notificationData.setPayload(payload);
         notificationData.setSubject(subject);
-        if (StringUtils.isEmpty(status)) {
+        if (status == null || status.trim().length() < 1 || status.trim().equalsIgnoreCase("null")) {
             status = "unread";
         }
         notificationData.setStatus(status);

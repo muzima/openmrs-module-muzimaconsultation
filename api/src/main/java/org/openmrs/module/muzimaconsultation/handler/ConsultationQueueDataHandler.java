@@ -97,6 +97,7 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
             Person recipient = null;
             Object consultationObject = JsonUtils.readAsObject(queueData.getPayload(), "$['consultation']");
             String recipientString = JsonUtils.readAsString(String.valueOf(consultationObject), "$['consultation.recipient']");
+            String sourceUuid = JsonUtils.readAsString(String.valueOf(consultationObject), "$['consultation.sourceUuid']");
             String[] recipientParts = StringUtils.split(recipientString, ":");
             if (ArrayUtils.getLength(recipientParts) == 2) {
                 if (StringUtils.equalsIgnoreCase(recipientParts[1], "u")) {
@@ -106,7 +107,7 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
                     role = Context.getUserService().getRole(recipientParts[0]);
                 }
             }
-            generateNotification(queueData.getUuid(), encounter, recipient, role);
+            generateNotification(encounter, recipient, role, sourceUuid);
         } catch (Exception e) {
             e.printStackTrace();
             String reason = "Unable to generate notification information. Rolling back encounter.";
@@ -115,11 +116,9 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
         }
     }
 
-    private void generateNotification(final String uuid, final Encounter encounter, final Person recipient, final Role role) {
+    private void generateNotification(final Encounter encounter, final Person recipient, final Role role, final String sourceUuid) {
         Person sender = encounter.getProvider();
         NotificationData notificationData = new NotificationData();
-        //persist queueData uuid to notification
-        notificationData.setUuid(uuid);
         notificationData.setRole(role);
 
         Patient patient = encounter.getPatient();
@@ -140,8 +139,8 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
                 + "<br/>Requested Information: "
                 + "<a href='/" + WebConstants.WEBAPP_NAME + "/admin/encounters/encounter.form?encounterId=" + encounter.getEncounterId() + "'>View Encounter</a>"
         );
-        notificationData.setStatus("unread");
-        notificationData.setSource("Mobile Device");
+        notificationData.setStatus("incoming");
+        notificationData.setSource(sourceUuid != null ? sourceUuid: "Mobile Device");
         notificationData.setSender(sender);
         notificationData.setReceiver(recipient);
         Context.getService(DataService.class).saveNotificationData(notificationData);

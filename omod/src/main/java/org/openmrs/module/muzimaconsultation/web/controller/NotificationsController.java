@@ -55,16 +55,16 @@ public class NotificationsController {
         if (!roleBased) {
             Person person = Context.getPersonService().getPersonByUuid(uuid);
             if (outgoing) {
-                pages = (service.countNotificationDataBySender(person, search).intValue() + pageSize - 1) / pageSize;
-                notificationDataList = service.getNotificationDataBySender(person, search, pageNumber, pageSize);
+                pages = (service.countNotificationDataBySender(person, search, "unread").intValue() + pageSize - 1) / pageSize;
+                notificationDataList = service.getNotificationDataBySender(person, search, pageNumber, pageSize, "unread");
             } else {
-                pages = (service.countNotificationDataByReceiver(person, search).intValue() + pageSize - 1) / pageSize;
-                notificationDataList = service.getNotificationDataByReceiver(person, search, pageNumber, pageSize);
+                pages = (service.countNotificationDataByReceiver(person, search, "incoming").intValue() + pageSize - 1) / pageSize;
+                notificationDataList = service.getNotificationDataByReceiver(person, search, pageNumber, pageSize, "incoming");
             }
         } else {
             Role role = Context.getUserService().getRoleByUuid(uuid);
-            pages = (service.countNotificationDataByRole(role, search).intValue() + pageSize - 1) / pageSize;
-            notificationDataList = service.getNotificationDataByRole(role, search, pageNumber, pageSize);
+            pages = (service.countNotificationDataByRole(role, search, "incoming").intValue() + pageSize - 1) / pageSize;
+            notificationDataList = service.getNotificationDataByRole(role, search, pageNumber, pageSize, "incoming");
         }
 
         List<Object> objects = new ArrayList<Object>();
