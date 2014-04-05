@@ -107,7 +107,7 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
                     role = Context.getUserService().getRole(recipientParts[0]);
                 }
             }
-            generateNotification(encounter, recipient, role, sourceUuid);
+            generateNotification(sourceUuid, encounter, recipient, role);
         } catch (Exception e) {
             e.printStackTrace();
             String reason = "Unable to generate notification information. Rolling back encounter.";
@@ -116,9 +116,12 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
         }
     }
 
-    private void generateNotification(final Encounter encounter, final Person recipient, final Role role, final String sourceUuid) {
+    private void generateNotification(final String uuid, final Encounter encounter, final Person recipient, final Role role) {
         Person sender = encounter.getProvider();
         NotificationData notificationData = new NotificationData();
+
+        //persist queueData uuid to notification
+        notificationData.setUuid(uuid);
         notificationData.setRole(role);
 
         Patient patient = encounter.getPatient();
@@ -140,7 +143,7 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
                 + "<a href='/" + WebConstants.WEBAPP_NAME + "/admin/encounters/encounter.form?encounterId=" + encounter.getEncounterId() + "'>View Encounter</a>"
         );
         notificationData.setStatus("incoming");
-        notificationData.setSource(sourceUuid != null ? sourceUuid: "Mobile Device");
+        notificationData.setSource("Mobile Device");
         notificationData.setSender(sender);
         notificationData.setReceiver(recipient);
         Context.getService(DataService.class).saveNotificationData(notificationData);
