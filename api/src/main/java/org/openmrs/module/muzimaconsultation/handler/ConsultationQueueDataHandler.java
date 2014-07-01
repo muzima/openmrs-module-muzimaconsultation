@@ -89,7 +89,7 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
             Role role = null;
             Person recipient = null;
             Object consultationObject = JsonUtils.readAsObject(queueData.getPayload(), "$['consultation']");
-            String recipientString = JsonUtils.readAsString(String.valueOf(consultationObject), "$['recipient']");
+            String recipientString = JsonUtils.readAsString(String.valueOf(consultationObject), "$['consultation.recipient']");
             String[] recipientParts = StringUtils.split(recipientString, ":");
             if (ArrayUtils.getLength(recipientParts) == 2) {
                 if (StringUtils.equalsIgnoreCase(recipientParts[1], "u")) {
