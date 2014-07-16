@@ -13,6 +13,7 @@
  */
 package org.openmrs.module.muzimaconsultation.web.controller;
 
+import org.apache.commons.lang.StringUtils;
 import org.openmrs.Person;
 import org.openmrs.Role;
 import org.openmrs.User;
@@ -55,16 +56,16 @@ public class NotificationsController {
         if (!roleBased) {
             Person person = Context.getPersonService().getPersonByUuid(uuid);
             if (outgoing) {
-                pages = (service.countNotificationDataBySender(person, search).intValue() + pageSize - 1) / pageSize;
-                notificationDataList = service.getNotificationDataBySender(person, search, pageNumber, pageSize);
+                pages = (service.countNotificationDataBySender(person, search, StringUtils.EMPTY).intValue() + pageSize - 1) / pageSize;
+                notificationDataList = service.getNotificationDataBySender(person, search, pageNumber, pageSize, StringUtils.EMPTY);
             } else {
-                pages = (service.countNotificationDataByReceiver(person, search).intValue() + pageSize - 1) / pageSize;
-                notificationDataList = service.getNotificationDataByReceiver(person, search, pageNumber, pageSize);
+                pages = (service.countNotificationDataByReceiver(person, search, StringUtils.EMPTY).intValue() + pageSize - 1) / pageSize;
+                notificationDataList = service.getNotificationDataByReceiver(person, search, pageNumber, pageSize, StringUtils.EMPTY);
             }
         } else {
             Role role = Context.getUserService().getRoleByUuid(uuid);
-            pages = (service.countNotificationDataByRole(role, search).intValue() + pageSize - 1) / pageSize;
-            notificationDataList = service.getNotificationDataByRole(role, search, pageNumber, pageSize);
+            pages = (service.countNotificationDataByRole(role, search, StringUtils.EMPTY).intValue() + pageSize - 1) / pageSize;
+            notificationDataList = service.getNotificationDataByRole(role, search, pageNumber, pageSize, StringUtils.EMPTY);
         }
 
         List<Object> objects = new ArrayList<Object>();

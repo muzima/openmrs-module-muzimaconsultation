@@ -35,7 +35,6 @@ import org.openmrs.PersonName;
 import org.openmrs.Role;
 import org.openmrs.User;
 import org.openmrs.annotation.Handler;
-import org.openmrs.api.APIException;
 import org.openmrs.api.LocationService;
 import org.openmrs.api.PatientService;
 import org.openmrs.api.context.Context;
@@ -45,6 +44,8 @@ import org.openmrs.module.muzima.model.NotificationData;
 import org.openmrs.module.muzima.model.QueueData;
 import org.openmrs.module.muzima.model.handler.QueueDataHandler;
 import org.openmrs.module.muzimaconsultation.utils.JsonUtils;
+import org.openmrs.module.muzimaforms.MuzimaForm;
+import org.openmrs.module.muzimaforms.api.MuzimaFormService;
 import org.openmrs.obs.ComplexData;
 import org.springframework.stereotype.Component;
 
@@ -277,6 +278,9 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
             String[] valueCodedElements = StringUtils.split(value, "\\^");
             int valueCodedId = Integer.parseInt(valueCodedElements[0]);
             Concept valueCoded = Context.getConceptService().getConcept(valueCodedId);
+            if (valueCoded == null) {
+                throw new QueueProcessorException("Unable to find concept for value coded with id: " + valueCodedId);
+            }
             obs.setValueCoded(valueCoded);
         } else if (concept.getDatatype().isText()) {
             obs.setValueText(value);
@@ -316,23 +320,43 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
     private void processEncounter(final Encounter encounter, final Object encounterObject) throws QueueProcessorException {
         String encounterPayload = encounterObject.toString();
 
-        String formString = JsonUtils.readAsString(encounterPayload, "$['encounter.form_id']");
-        int formId = NumberUtils.toInt(formString, -999);
-        Form form = Context.getFormService().getForm(formId);
-        encounter.setForm(form);
-
-        String encounterTypeString = JsonUtils.readAsString(encounterPayload, "$['encounter.type_id']");
-        int encounterTypeId = NumberUtils.toInt(encounterTypeString, 1);
-        EncounterType encounterType = Context.getEncounterService().getEncounterType(encounterTypeId);
-        encounter.setEncounterType(encounterType);
+        String formUuid = JsonUtils.readAsString(encounterPayload, "$['encounter.form_uuid']");
+        Form form = Context.getFormService().getFormByUuid(formUuid);
+        if (form == null) {
+            MuzimaFormService muzimaFormService = Context.getService(MuzimaFormService.class);
+            MuzimaForm muzimaForm = muzimaFormService.findByUniqueId(formUuid);
+            if (muzimaForm != null) {
+                Form formDefinition = Context.getFormService().getFormByUuid(muzimaForm.getForm());
+                encounter.setForm(formDefinition);
+                encounter.setEncounterType(formDefinition.getEncounterType());
+            } else {
+                log.info("Unable to find form using the uuid: " + formUuid + ". Setting the form field to null!");
+                String encounterTypeString = JsonUtils.readAsString(encounterPayload, "$['encounter.type_id']");
+                int encounterTypeId = NumberUtils.toInt(encounterTypeString, 1);
+                EncounterType encounterType = Context.getEncounterService().getEncounterType(encounterTypeId);
+                if (encounterType == null) {
+                    throw new QueueProcessorException("Unable to find encounter type using the id: " + encounterTypeString);
+                }
+                encounter.setEncounterType(encounterType);
+            }
+        } else {
+            encounter.setForm(form);
+            encounter.setEncounterType(form.getEncounterType());
+        }
 
         String providerString = JsonUtils.readAsString(encounterPayload, "$['encounter.provider_id']");
         User user = Context.getUserService().getUserByUsername(providerString);
+        if (user == null) {
+            throw new QueueProcessorException("Unable to find user using the id: " + providerString);
+        }
         encounter.setProvider(user);
 
         String locationString = JsonUtils.readAsString(encounterPayload, "$['encounter.location_id']");
         int locationId = NumberUtils.toInt(locationString, -999);
         Location location = Context.getLocationService().getLocation(locationId);
+        if (location == null) {
+            throw new QueueProcessorException("Unable to find encounter location using the id: " + locationString);
+        }
         encounter.setLocation(location);
 
         Date encounterDatetime = JsonUtils.readAsDate(encounterPayload, "$['encounter.encounter_datetime']");
