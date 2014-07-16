@@ -21,21 +21,8 @@ import org.apache.commons.lang.math.NumberUtils;
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.openmrs.Concept;
-import org.openmrs.Encounter;
-import org.openmrs.EncounterType;
-import org.openmrs.Form;
-import org.openmrs.Location;
-import org.openmrs.Obs;
-import org.openmrs.Patient;
-import org.openmrs.PatientIdentifier;
-import org.openmrs.PatientIdentifierType;
-import org.openmrs.Person;
-import org.openmrs.PersonName;
-import org.openmrs.Role;
-import org.openmrs.User;
+import org.openmrs.*;
 import org.openmrs.annotation.Handler;
-import org.openmrs.api.APIException;
 import org.openmrs.api.LocationService;
 import org.openmrs.api.PatientService;
 import org.openmrs.api.context.Context;
@@ -47,9 +34,7 @@ import org.openmrs.module.muzima.model.handler.QueueDataHandler;
 import org.openmrs.module.muzimaconsultation.utils.JsonUtils;
 import org.openmrs.obs.ComplexData;
 import org.openmrs.web.WebConstants;
-import org.openmrs.web.WebUtil;
 import org.springframework.stereotype.Component;
-import org.springframework.web.util.WebUtils;
 
 import javax.xml.bind.DatatypeConverter;
 import java.io.ByteArrayInputStream;
@@ -116,12 +101,9 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
         }
     }
 
-    private void generateNotification(final String uuid, final Encounter encounter, final Person recipient, final Role role) {
+    private void generateNotification(final String sourceUuid, final Encounter encounter, final Person recipient, final Role role) {
         Person sender = encounter.getProvider();
         NotificationData notificationData = new NotificationData();
-
-        //persist queueData uuid to notification
-        notificationData.setUuid(uuid);
         notificationData.setRole(role);
 
         Patient patient = encounter.getPatient();
@@ -143,7 +125,7 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
                 + "<a href='/" + WebConstants.WEBAPP_NAME + "/admin/encounters/encounter.form?encounterId=" + encounter.getEncounterId() + "'>View Encounter</a>"
         );
         notificationData.setStatus("incoming");
-        notificationData.setSource("Mobile Device");
+        notificationData.setSource(sourceUuid);
         notificationData.setSender(sender);
         notificationData.setReceiver(recipient);
         Context.getService(DataService.class).saveNotificationData(notificationData);
