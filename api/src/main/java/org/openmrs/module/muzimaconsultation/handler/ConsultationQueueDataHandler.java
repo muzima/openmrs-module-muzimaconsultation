@@ -21,19 +21,7 @@ import org.apache.commons.lang.math.NumberUtils;
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.openmrs.Concept;
-import org.openmrs.Encounter;
-import org.openmrs.EncounterType;
-import org.openmrs.Form;
-import org.openmrs.Location;
-import org.openmrs.Obs;
-import org.openmrs.Patient;
-import org.openmrs.PatientIdentifier;
-import org.openmrs.PatientIdentifierType;
-import org.openmrs.Person;
-import org.openmrs.PersonName;
-import org.openmrs.Role;
-import org.openmrs.User;
+import org.openmrs.*;
 import org.openmrs.annotation.Handler;
 import org.openmrs.api.LocationService;
 import org.openmrs.api.PatientService;
@@ -47,6 +35,7 @@ import org.openmrs.module.muzimaconsultation.utils.JsonUtils;
 import org.openmrs.module.muzimaforms.MuzimaForm;
 import org.openmrs.module.muzimaforms.api.MuzimaFormService;
 import org.openmrs.obs.ComplexData;
+import org.openmrs.web.WebConstants;
 import org.springframework.stereotype.Component;
 
 import javax.xml.bind.DatatypeConverter;
@@ -91,6 +80,7 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
             Person recipient = null;
             Object consultationObject = JsonUtils.readAsObject(queueData.getPayload(), "$['consultation']");
             String recipientString = JsonUtils.readAsString(String.valueOf(consultationObject), "$['consultation.recipient']");
+            String sourceUuid = JsonUtils.readAsString(String.valueOf(consultationObject), "$['consultation.sourceUuid']");
             String[] recipientParts = StringUtils.split(recipientString, ":");
             if (ArrayUtils.getLength(recipientParts) == 2) {
                 if (StringUtils.equalsIgnoreCase(recipientParts[1], "u")) {
@@ -100,7 +90,7 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
                     role = Context.getUserService().getRole(recipientParts[0]);
                 }
             }
-            generateNotification(encounter, recipient, role);
+            generateNotification(sourceUuid, encounter, recipient, role);
         } catch (Exception e) {
             String reason = "Unable to generate notification information. Rolling back encounter.";
             Context.getEncounterService().voidEncounter(encounter, reason);
@@ -108,7 +98,7 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
         }
     }
 
-    private void generateNotification(final Encounter encounter, final Person recipient, final Role role) {
+    private void generateNotification(final String sourceUuid, final Encounter encounter, final Person recipient, final Role role) {
         Person sender = encounter.getProvider();
         NotificationData notificationData = new NotificationData();
         notificationData.setRole(role);
@@ -125,13 +115,14 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
         String subject = "New Consultation on " + patientName + " by " + senderName;
         notificationData.setSubject(subject);
 
-        notificationData.setPayload("Dear " + recipientName + ","
+        notificationData.setPayload("Dear " + recipientName + ",<br/>"
                 + "<br/>Please review the newly created consultation request for the following patient:"
                 + "<br/>Patient Name: " + patientName
-                + "<br/>Requested Information: " + encounter.getEncounterId());
-
-        notificationData.setStatus("NEW");
-        notificationData.setSource("Mobile Device");
+                + "<br/>Requested Information: "
+                + "<a href='/" + WebConstants.WEBAPP_NAME + "/admin/encounters/encounter.form?encounterId=" + encounter.getEncounterId() + "'>View Encounter</a>"
+        );
+        notificationData.setStatus("incoming");
+        notificationData.setSource(sourceUuid);
         notificationData.setSender(sender);
         notificationData.setReceiver(recipient);
         Context.getService(DataService.class).saveNotificationData(notificationData);

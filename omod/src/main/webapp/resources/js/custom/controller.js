@@ -110,6 +110,7 @@ function ListConsultationsCtrl($scope, $routeParams, $person, $notifications) {
     $scope.currentPage = 1;
     $scope.outgoing = $routeParams.outgoing;
     $scope.role = $routeParams.role;
+    $scope.showRead = $routeParams.showRead;
 
     $scope.nav = function(whichNavigation) {
         switch(whichNavigation) {
@@ -166,7 +167,7 @@ function ListConsultationsCtrl($scope, $routeParams, $person, $notifications) {
     $scope.roleSelected = function() {
         $scope.uuid = $scope.selectedRole.uuid;
         $notifications.getNotifications($scope.uuid, $scope.outgoing, $scope.role,
-                $scope.search, $scope.currentPage, $scope.pageSize).
+                $scope.search, $scope.showRead, $scope.currentPage, $scope.pageSize).
             then(function (response) {
                 var serverData = response.data;
                 $scope.notifications = serverData.objects;
@@ -182,7 +183,7 @@ function ListConsultationsCtrl($scope, $routeParams, $person, $notifications) {
             }).
             then(function () {
                 $notifications.getNotifications($scope.uuid, $scope.outgoing, $scope.role,
-                        $scope.search, $scope.currentPage, $scope.pageSize).
+                        $scope.search, $scope.showRead, $scope.currentPage, $scope.pageSize).
                     then(function (response) {
                         var serverData = response.data;
                         $scope.notifications = serverData.objects;
@@ -194,7 +195,7 @@ function ListConsultationsCtrl($scope, $routeParams, $person, $notifications) {
     $scope.$watch('currentPage', function (newValue, oldValue) {
         if (newValue != oldValue) {
             $notifications.getNotifications($scope.uuid, $scope.outgoing, $scope.role,
-                    $scope.search, $scope.currentPage, $scope.pageSize).
+                    $scope.search, $scope.showRead, $scope.currentPage, $scope.pageSize).
                 then(function (response) {
                     var serverData = response.data;
                     $scope.notifications = serverData.objects;
@@ -207,7 +208,7 @@ function ListConsultationsCtrl($scope, $routeParams, $person, $notifications) {
         if (newValue != oldValue) {
             $scope.currentPage = 1;
             $notifications.getNotifications($scope.uuid, $scope.outgoing, $scope.role,
-                    $scope.search, $scope.currentPage, $scope.pageSize).
+                    $scope.search, $scope.showRead, $scope.currentPage, $scope.pageSize).
                 then(function (response) {
                     var serverData = response.data;
                     $scope.notifications = serverData.objects;
@@ -215,4 +216,15 @@ function ListConsultationsCtrl($scope, $routeParams, $person, $notifications) {
                 });
         }
     }, true);
+
+    $scope.viewRead = function () {
+    $notifications.getNotifications($scope.uuid, $scope.outgoing, $scope.role,
+        $scope.search, $scope.showRead, $scope.currentPage, $scope.pageSize).
+        then(function (response) {
+            var serverData = response.data;
+            $scope.notifications = serverData.objects;
+            $scope.noOfPages = serverData.pages;
+        });
+
+    };
 }

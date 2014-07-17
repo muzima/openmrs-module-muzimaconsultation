@@ -13,7 +13,6 @@
  */
 package org.openmrs.module.muzimaconsultation.web.controller;
 
-import org.apache.commons.lang.StringUtils;
 import org.openmrs.Person;
 import org.openmrs.Role;
 import org.openmrs.User;
@@ -46,26 +45,43 @@ public class NotificationsController {
                                                    final @RequestParam(value = "outgoing", required = true) boolean outgoing,
                                                    final @RequestParam(value = "role", required = true) boolean roleBased,
                                                    final @RequestParam(value = "search") String search,
+                                                   final @RequestParam(value = "showRead") boolean showRead,
                                                    final @RequestParam(value = "pageNumber") Integer pageNumber,
                                                    final @RequestParam(value = "pageSize") Integer pageSize) {
         Map<String, Object> response = new HashMap<String, Object>();
         DataService service = Context.getService(DataService.class);
-
         Integer pages;
         List<NotificationData> notificationDataList;
+        List<NotificationData> readNotificationDataList;
         if (!roleBased) {
             Person person = Context.getPersonService().getPersonByUuid(uuid);
             if (outgoing) {
-                pages = (service.countNotificationDataBySender(person, search, StringUtils.EMPTY).intValue() + pageSize - 1) / pageSize;
-                notificationDataList = service.getNotificationDataBySender(person, search, pageNumber, pageSize, StringUtils.EMPTY);
+                pages = (service.countNotificationDataBySender(person, search, "unread").intValue() + pageSize - 1) / pageSize;
+                notificationDataList = service.getNotificationDataBySender(person, search, pageNumber, pageSize, "unread");
             } else {
-                pages = (service.countNotificationDataByReceiver(person, search, StringUtils.EMPTY).intValue() + pageSize - 1) / pageSize;
-                notificationDataList = service.getNotificationDataByReceiver(person, search, pageNumber, pageSize, StringUtils.EMPTY);
+                pages = (service.countNotificationDataByReceiver(person, search, "incoming").intValue() + pageSize - 1) / pageSize;
+                notificationDataList = service.getNotificationDataByReceiver(person, search, pageNumber, pageSize, "incoming");
+
+                if (showRead) {
+                    pages = (service.countNotificationDataByReceiver(person, search, "read").intValue() + pageSize - 1) / pageSize;
+                    readNotificationDataList = service.getNotificationDataByReceiver(person, search, pageNumber, pageSize, "read");
+                    for (NotificationData notificationData : readNotificationDataList) {
+                        notificationDataList.add(notificationData);
+                    }
+                }
             }
         } else {
             Role role = Context.getUserService().getRoleByUuid(uuid);
-            pages = (service.countNotificationDataByRole(role, search, StringUtils.EMPTY).intValue() + pageSize - 1) / pageSize;
-            notificationDataList = service.getNotificationDataByRole(role, search, pageNumber, pageSize, StringUtils.EMPTY);
+            pages = (service.countNotificationDataByRole(role, search, "incoming").intValue() + pageSize - 1) / pageSize;
+            notificationDataList = service.getNotificationDataByRole(role, search, pageNumber, pageSize, "incoming");
+
+            if (showRead) {
+                pages = (service.countNotificationDataByRole(role, search, "read").intValue() + pageSize - 1) / pageSize;
+                readNotificationDataList = service.getNotificationDataByRole(role, search, pageNumber, pageSize, "read");
+                for (NotificationData notificationData : readNotificationDataList) {
+                    notificationDataList.add(notificationData);
+                }
+            }
         }
 
         List<Object> objects = new ArrayList<Object>();
