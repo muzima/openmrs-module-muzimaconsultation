@@ -26,6 +26,10 @@
             <groupId>org.openmrs.module</groupId>
             <artifactId>muzima-omod</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.openmrs.module</groupId>
+            <artifactId>muzimaforms-omod</artifactId>
+        </dependency>
 		<!-- End OpenMRS modules -->
 
 		<!-- Begin OpenMRS core -->
