@@ -44,15 +44,19 @@ muzimaconsultation.factory('$notification', function ($http) {
 
 
 muzimaconsultation.factory('$notifications', function ($http) {
-    var getNotifications = function (uuid, outgoing, role, search, pageNumber, pageSize) {
+    var getNotifications = function (uuid, outgoing, role, search, showRead, pageNumber, pageSize) {
         if (search === undefined) {
             search = '';
+        }
+        if (showRead === undefined){
+            showRead = 'false';
         }
         return $http.get('notifications.json?'
             + 'uuid=' + uuid
             + '&outgoing=' + outgoing
             + '&role=' + role
             + "&search=" + search
+            + '&showRead=' + showRead
             + "&pageNumber=" + pageNumber
             + "&pageSize=" + pageSize);
     };

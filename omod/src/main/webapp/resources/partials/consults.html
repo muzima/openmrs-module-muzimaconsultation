@@ -16,6 +16,9 @@
                 <div class="span4 pull-left" ng-show="role">
                     <select ng-change="roleSelected()" ng-model="selectedRole" ng-options="role.name for role in roles | orderBy: 'name'"></select>
                 </div>
+                <div class="span4 pull-left" ng-hide="outgoing">
+                    Show Replied to consults: <input type="checkbox" ng-click="viewRead()" ng-model="showRead"/>
+                </div>
                 <div class="span4 pull-right">
                     <input type="text" ng-model="search" class="search-query search-query-size" />
                 </div>

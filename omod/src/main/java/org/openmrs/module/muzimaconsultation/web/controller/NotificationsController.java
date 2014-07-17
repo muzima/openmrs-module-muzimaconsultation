@@ -15,7 +15,6 @@ package org.openmrs.module.muzimaconsultation.web.controller;
 
 import org.openmrs.Person;
 import org.openmrs.Role;
-import org.openmrs.User;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.muzima.api.service.DataService;
 import org.openmrs.module.muzima.model.NotificationData;
@@ -30,7 +29,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * TODO: Write brief description about the class here.
@@ -45,13 +43,14 @@ public class NotificationsController {
                                                    final @RequestParam(value = "outgoing", required = true) boolean outgoing,
                                                    final @RequestParam(value = "role", required = true) boolean roleBased,
                                                    final @RequestParam(value = "search") String search,
+                                                   final @RequestParam(value = "showRead") boolean showRead,
                                                    final @RequestParam(value = "pageNumber") Integer pageNumber,
                                                    final @RequestParam(value = "pageSize") Integer pageSize) {
         Map<String, Object> response = new HashMap<String, Object>();
         DataService service = Context.getService(DataService.class);
-
         Integer pages;
         List<NotificationData> notificationDataList;
+        List<NotificationData> readNotificationDataList;
         if (!roleBased) {
             Person person = Context.getPersonService().getPersonByUuid(uuid);
             if (outgoing) {
@@ -60,11 +59,27 @@ public class NotificationsController {
             } else {
                 pages = (service.countNotificationDataByReceiver(person, search, "incoming").intValue() + pageSize - 1) / pageSize;
                 notificationDataList = service.getNotificationDataByReceiver(person, search, pageNumber, pageSize, "incoming");
+
+                if (showRead) {
+                    pages = (service.countNotificationDataByReceiver(person, search, "read").intValue() + pageSize - 1) / pageSize;
+                    readNotificationDataList = service.getNotificationDataByReceiver(person, search, pageNumber, pageSize, "read");
+                    for (NotificationData notificationData : readNotificationDataList) {
+                        notificationDataList.add(notificationData);
+                    }
+                }
             }
         } else {
             Role role = Context.getUserService().getRoleByUuid(uuid);
             pages = (service.countNotificationDataByRole(role, search, "incoming").intValue() + pageSize - 1) / pageSize;
             notificationDataList = service.getNotificationDataByRole(role, search, pageNumber, pageSize, "incoming");
+
+            if (showRead) {
+                pages = (service.countNotificationDataByRole(role, search, "read").intValue() + pageSize - 1) / pageSize;
+                readNotificationDataList = service.getNotificationDataByRole(role, search, pageNumber, pageSize, "read");
+                for (NotificationData notificationData : readNotificationDataList) {
+                    notificationDataList.add(notificationData);
+                }
+            }
         }
 
         List<Object> objects = new ArrayList<Object>();
