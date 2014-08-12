@@ -5,7 +5,7 @@
 
     <groupId>org.openmrs.module</groupId>
     <artifactId>muzimaconsultation</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Muzima Consultation Module</name>
     <description>Module to process consultation form data.</description>
@@ -37,7 +37,7 @@
         <openMRSVersion>1.8.2</openMRSVersion>
         <muzimaVersion>1.0.0</muzimaVersion>
         <minidevVersion>1.1.1</minidevVersion>
-        <muzimaFormsVersion>0.1-SNAPSHOT</muzimaFormsVersion>
+        <muzimaFormsVersion>1.0.0</muzimaFormsVersion>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
