@@ -21,7 +21,19 @@ import org.apache.commons.lang.math.NumberUtils;
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.openmrs.*;
+import org.openmrs.Concept;
+import org.openmrs.Encounter;
+import org.openmrs.EncounterType;
+import org.openmrs.Form;
+import org.openmrs.Location;
+import org.openmrs.Obs;
+import org.openmrs.Patient;
+import org.openmrs.PatientIdentifier;
+import org.openmrs.PatientIdentifierType;
+import org.openmrs.Person;
+import org.openmrs.PersonName;
+import org.openmrs.Role;
+import org.openmrs.User;
 import org.openmrs.annotation.Handler;
 import org.openmrs.api.LocationService;
 import org.openmrs.api.PatientService;
@@ -31,9 +43,11 @@ import org.openmrs.module.muzima.exception.QueueProcessorException;
 import org.openmrs.module.muzima.model.NotificationData;
 import org.openmrs.module.muzima.model.QueueData;
 import org.openmrs.module.muzima.model.handler.QueueDataHandler;
-import org.openmrs.module.muzimaconsultation.utils.JsonUtils;
+import org.openmrs.module.muzima.web.resource.utils.JsonUtils;
 import org.openmrs.module.muzimaforms.MuzimaForm;
 import org.openmrs.module.muzimaforms.api.MuzimaFormService;
+import org.openmrs.module.muzimaregistration.api.RegistrationDataService;
+import org.openmrs.module.muzimaregistration.api.model.RegistrationData;
 import org.openmrs.obs.ComplexData;
 import org.openmrs.web.WebConstants;
 import org.springframework.stereotype.Component;
@@ -45,7 +59,9 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -60,41 +76,77 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
 
     private final Log log = LogFactory.getLog(ConsultationQueueDataHandler.class);
 
+    private QueueProcessorException queueProcessorException;
+
+    private Encounter encounter;
+
     @Override
     public void process(final QueueData queueData) throws QueueProcessorException {
-        log.info("Processing encounter form data: " + queueData.getUuid());
-        Encounter encounter = new Encounter();
-
-        Object encounterObject = JsonUtils.readAsObject(queueData.getPayload(), "$['encounter']");
-        processEncounter(encounter, encounterObject);
-
-        Object patientObject = JsonUtils.readAsObject(queueData.getPayload(), "$['patient']");
-        processPatient(encounter, patientObject);
-
-        Object obsObject = JsonUtils.readAsObject(queueData.getPayload(), "$['observation']");
-        processObs(encounter, null, obsObject);
-        Context.getEncounterService().saveEncounter(encounter);
 
         try {
-            Role role = null;
-            Person recipient = null;
-            Object consultationObject = JsonUtils.readAsObject(queueData.getPayload(), "$['consultation']");
-            String recipientString = JsonUtils.readAsString(String.valueOf(consultationObject), "$['consultation.recipient']");
-            String sourceUuid = JsonUtils.readAsString(String.valueOf(consultationObject), "$['consultation.sourceUuid']");
-            String[] recipientParts = StringUtils.split(recipientString, ":");
-            if (ArrayUtils.getLength(recipientParts) == 2) {
-                if (StringUtils.equalsIgnoreCase(recipientParts[1], "u")) {
-                    User user = Context.getUserService().getUserByUsername(recipientParts[0]);
-                    recipient = user.getPerson();
-                } else if (StringUtils.equalsIgnoreCase(recipientParts[1], "g")) {
-                    role = Context.getUserService().getRole(recipientParts[0]);
+            if (validate(queueData)) {
+                Context.getEncounterService().saveEncounter(encounter);
+
+                try {
+                    Role role = null;
+                    Person recipient = null;
+                    Object consultationObject = JsonUtils.readAsObject(queueData.getPayload(), "$['consultation']");
+                    String recipientString = JsonUtils.readAsString(String.valueOf(consultationObject), "$['consultation.recipient']");
+                    String sourceUuid = JsonUtils.readAsString(String.valueOf(consultationObject), "$['consultation.sourceUuid']");
+                    String[] recipientParts = StringUtils.split(recipientString, ":");
+                    if (ArrayUtils.getLength(recipientParts) == 2) {
+                        if (StringUtils.equalsIgnoreCase(recipientParts[1], "u")) {
+                            User user = Context.getUserService().getUserByUsername(recipientParts[0]);
+                            recipient = user.getPerson();
+                        } else if (StringUtils.equalsIgnoreCase(recipientParts[1], "g")) {
+                            role = Context.getUserService().getRole(recipientParts[0]);
+                        }
+                    }
+                    generateNotification(sourceUuid, encounter, recipient, role);
+                } catch (Exception e) {
+                    if (!e.getClass().equals(QueueProcessorException.class)) {
+                        String reason = "Unable to generate notification information. Rolling back encounter.";
+                        queueProcessorException.addException(new Exception(reason, e));
+                        Context.getEncounterService().voidEncounter(encounter, reason);
+                    }
                 }
             }
-            generateNotification(sourceUuid, encounter, recipient, role);
         } catch (Exception e) {
-            String reason = "Unable to generate notification information. Rolling back encounter.";
-            Context.getEncounterService().voidEncounter(encounter, reason);
-            throw new QueueProcessorException(reason, e);
+            if (!e.getClass().equals(QueueProcessorException.class))
+                queueProcessorException.addException(e);
+        } finally {
+            if (queueProcessorException.anyExceptions()) {
+                throw queueProcessorException;
+            }
+        }
+    }
+
+    @Override
+    public boolean validate(final QueueData queueData) throws QueueProcessorException {
+        try {
+            queueProcessorException = new QueueProcessorException();
+            log.info("Processing encounter form data: " + queueData.getUuid());
+            encounter = new Encounter();
+            String payload = queueData.getPayload();
+
+            //Object encounterObject = JsonUtils.readAsObject(queueData.getPayload(), "$['encounter']");
+            processEncounter(encounter, payload);
+
+            //Object patientObject = JsonUtils.readAsObject(queueData.getPayload(), "$['patient']");
+            processPatient(encounter, payload);
+
+            Object obsObject = JsonUtils.readAsObject(queueData.getPayload(), "$['observation']");
+            processObs(encounter, null, obsObject);
+
+            return true;
+
+        } catch (Exception e) {
+            queueProcessorException.addException(e);
+            return false;
+        } finally {
+            if (queueProcessorException.anyExceptions()) {
+                throw queueProcessorException;
+            }
         }
     }
 
@@ -128,20 +180,20 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
         Context.getService(DataService.class).saveNotificationData(notificationData);
     }
 
-    private void processPatient(final Encounter encounter, final Object patientObject) throws QueueProcessorException {
+    private void processPatient(final Encounter encounter, final Object patientObject) {
         Patient unsavedPatient = new Patient();
         String patientPayload = patientObject.toString();
 
-        String uuid = JsonUtils.readAsString(patientPayload, "$['patient.uuid']");
+        String uuid = JsonUtils.readAsString(patientPayload, "$['patient']['patient.uuid']");
         unsavedPatient.setUuid(uuid);
 
         PatientService patientService = Context.getPatientService();
         LocationService locationService = Context.getLocationService();
         PatientIdentifierType defaultIdentifierType = patientService.getPatientIdentifierType(1);
 
-        String identifier = JsonUtils.readAsString(patientPayload, "$['patient.medical_record_number']");
-        String identifierTypeUuid = JsonUtils.readAsString(patientPayload, "$['patient.identifier_type']");
-        String locationUuid = JsonUtils.readAsString(patientPayload, "$['patient.identifier_location']");
+        String identifier = JsonUtils.readAsString(patientPayload, "$['patient']['patient.medical_record_number']");
+        String identifierTypeUuid = JsonUtils.readAsString(patientPayload, "$['patient']['patient.identifier_type']");
+        String locationUuid = JsonUtils.readAsString(patientPayload, "$['patient']['patient.identifier_location']");
 
         PatientIdentifier patientIdentifier = new PatientIdentifier();
         Location location = StringUtils.isNotBlank(locationUuid) ?
@@ -153,17 +205,17 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
         patientIdentifier.setIdentifier(identifier);
         unsavedPatient.addIdentifier(patientIdentifier);
 
-        Date birthdate = JsonUtils.readAsDate(patientPayload, "$['patient.birthdate']");
-        boolean birthdateEstimated = JsonUtils.readAsBoolean(patientPayload, "$['patient.birthdate_estimated']");
-        String gender = JsonUtils.readAsString(patientPayload, "$['patient.sex']");
+        Date birthdate = JsonUtils.readAsDate(patientPayload, "$['patient']['patient.birth_date']");
+        boolean birthdateEstimated = JsonUtils.readAsBoolean(patientPayload, "$['patient']['patient.birthdate_estimated']");
+        String gender = JsonUtils.readAsString(patientPayload, "$['patient']['patient.sex']");
 
         unsavedPatient.setBirthdate(birthdate);
         unsavedPatient.setBirthdateEstimated(birthdateEstimated);
         unsavedPatient.setGender(gender);
 
-        String givenName = JsonUtils.readAsString(patientPayload, "$['patient.given_name']");
-        String middleName = JsonUtils.readAsString(patientPayload, "$['patient.middle_name']");
-        String familyName = JsonUtils.readAsString(patientPayload, "$['patient.family_name']");
+        String givenName = JsonUtils.readAsString(patientPayload, "$['patient']['patient.given_name']");
+        String middleName = JsonUtils.readAsString(patientPayload, "$['patient']['patient.middle_name']");
+        String familyName = JsonUtils.readAsString(patientPayload, "$['patient']['patient.family_name']");
 
         PersonName personName = new PersonName();
         personName.setGivenName(givenName);
@@ -176,6 +228,14 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
         Patient candidatePatient;
         if (StringUtils.isNotEmpty(unsavedPatient.getUuid())) {
             candidatePatient = Context.getPatientService().getPatientByUuid(unsavedPatient.getUuid());
+            if (candidatePatient == null) {
+                String temporaryUuid = unsavedPatient.getUuid();
+                RegistrationDataService dataService = Context.getService(RegistrationDataService.class);
+                RegistrationData registrationData = dataService.getRegistrationDataByTemporaryUuid(temporaryUuid);
+                if(registrationData!=null) {
+                    candidatePatient = Context.getPatientService().getPatientByUuid(registrationData.getAssignedUuid());
+                }
+            }
         } else if (!StringUtils.isBlank(patientIdentifier.getIdentifier())) {
             List<Patient> patients = Context.getPatientService().getPatients(patientIdentifier.getIdentifier());
             candidatePatient = findPatient(patients, unsavedPatient);
@@ -185,10 +245,11 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
         }
 
         if (candidatePatient == null) {
-            throw new QueueProcessorException("Unable to uniquely identify a patient for this encounter form data.");
+            queueProcessorException.addException(new Exception("Unable to uniquely identify patient for this encounter form data. "));
+            //+ ToStringBuilder.reflectionToString(unsavedPatient)));
+        } else {
+            encounter.setPatient(candidatePatient);
         }
-
-        encounter.setPatient(candidatePatient);
     }
 
     private Patient findPatient(final List<Patient> patients, final Patient unsavedPatient) {
@@ -221,43 +282,64 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
         return null;
     }
 
-    private void processObs(final Encounter encounter, final Obs parentObs, final Object obsObject) throws QueueProcessorException {
+    private void processObs(final Encounter encounter, final Obs parentObs, final Object obsObject) {
         if (obsObject instanceof JSONObject) {
             JSONObject obsJsonObject = (JSONObject) obsObject;
             for (String conceptQuestion : obsJsonObject.keySet()) {
                 String[] conceptElements = StringUtils.split(conceptQuestion, "\\^");
-                System.out.println("Question: " + conceptQuestion);
                 if (conceptElements.length < 3)
                     continue;
                 int conceptId = Integer.parseInt(conceptElements[0]);
                 Concept concept = Context.getConceptService().getConcept(conceptId);
-                if (concept.isSet()) {
-                    Obs obsGroup = new Obs();
-                    obsGroup.setConcept(concept);
-                    processObsObject(encounter, obsGroup, obsJsonObject.get(conceptQuestion));
-                    if (parentObs != null) {
-                        parentObs.addGroupMember(obsGroup);
-                    }
+                if (concept == null) {
+                    queueProcessorException.addException(new Exception("Unable to find Concept for Question with ID: " + conceptId));
                 } else {
-                    Object valueObject = obsJsonObject.get(conceptQuestion);
-                    Object o = JsonUtils.readAsObject(valueObject.toString(), "$");
-                    if (o instanceof JSONArray) {
-                        JSONArray jsonArray = (JSONArray) o;
-                        for (Object arrayElement : jsonArray) {
-                            createObs(encounter, parentObs, concept, arrayElement);
+                    if (concept.isSet()) {
+                        Obs obsGroup = new Obs();
+                        obsGroup.setConcept(concept);
+                        Object childObsObject = obsJsonObject.get(conceptQuestion);
+                        processObsObject(encounter, obsGroup, childObsObject);
+                        if (parentObs != null) {
+                            parentObs.addGroupMember(obsGroup);
                         }
                     } else {
-                        createObs(encounter, parentObs, concept, valueObject);
+                        Object valueObject = obsJsonObject.get(conceptQuestion);
+                        if (valueObject instanceof JSONArray) {
+                            JSONArray jsonArray = (JSONArray) valueObject;
+                            for (Object arrayElement : jsonArray) {
+                                createObs(encounter, parentObs, concept, arrayElement);
+                            }
+                        } else {
+                            createObs(encounter, parentObs, concept, valueObject);
+                        }
                     }
                 }
             }
+        }else if(obsObject instanceof LinkedHashMap){
+            Object obsAsJsonObject = new JSONObject((Map<String,?>)obsObject);
+            processObs(encounter, parentObs, obsAsJsonObject);
         }
     }
 
     private void createObs(final Encounter encounter, final Obs parentObs, final Concept concept, final Object o) {
-        String value = o.toString();
+        String value=null;
         Obs obs = new Obs();
         obs.setConcept(concept);
+
+        //check and parse if obs_value / obs_datetime object
+        if(o instanceof LinkedHashMap){
+            LinkedHashMap obj = (LinkedHashMap)o;
+            if(obj.containsKey("obs_value")){
+                value = (String)obj.get("obs_value");
+            }
+            if(obj.containsKey("obs_datetime")){
+                String dateString = (String)obj.get("obs_datetime");
+                Date obsDateTime = parseDate(dateString);
+                obs.setObsDatetime(obsDateTime);
+            }
+        }else{
+            value = o.toString();
+        }
         // find the obs value :)
         if (concept.getDatatype().isNumeric()) {
             obs.setValueNumeric(Double.parseDouble(value));
@@ -270,9 +352,10 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
             int valueCodedId = Integer.parseInt(valueCodedElements[0]);
             Concept valueCoded = Context.getConceptService().getConcept(valueCodedId);
             if (valueCoded == null) {
-                throw new QueueProcessorException("Unable to find concept for value coded with id: " + valueCodedId);
+                queueProcessorException.addException(new Exception("Unable to find concept for value coded with id: " + valueCodedId));
+            } else {
+                obs.setValueCoded(valueCoded);
             }
-            obs.setValueCoded(valueCoded);
         } else if (concept.getDatatype().isText()) {
             obs.setValueText(value);
         } else if (concept.getDatatype().isComplex()) {
@@ -293,17 +376,21 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
     }
 
     private void processObsObject(final Encounter encounter, final Obs parentObs, final Object childObsObject) {
-        Object o = JsonUtils.readAsObject(childObsObject.toString(), "$");
-        if (o instanceof JSONArray) {
-            JSONArray jsonArray = (JSONArray) o;
+        //Object o = JsonUtils.readAsObject(childObsObject.toString(), "$");
+        if (childObsObject instanceof JSONArray) {
+            JSONArray jsonArray = (JSONArray) childObsObject;
             for (Object arrayElement : jsonArray) {
                 Obs obsGroup = new Obs();
                 obsGroup.setConcept(parentObs.getConcept());
                 processObs(encounter, obsGroup, arrayElement);
                 encounter.addObs(obsGroup);
             }
-        } else if (o instanceof JSONObject) {
-            processObs(encounter, parentObs, o);
+        } else if (childObsObject instanceof JSONObject) {
+            processObs(encounter, parentObs, childObsObject);
+            encounter.addObs(parentObs);
+        }else if (childObsObject instanceof LinkedHashMap) {
+            Object childObsAsJsonObject = new JSONObject((Map<String,?>)childObsObject);
+            processObs(encounter, parentObs, childObsAsJsonObject);
             encounter.addObs(parentObs);
         }
     }
@@ -311,7 +398,7 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
     private void processEncounter(final Encounter encounter, final Object encounterObject) throws QueueProcessorException {
         String encounterPayload = encounterObject.toString();
 
-        String formUuid = JsonUtils.readAsString(encounterPayload, "$['encounter.form_uuid']");
+        String formUuid = JsonUtils.readAsString(encounterPayload, "$['encounter']['encounter.form_uuid']");
         Form form = Context.getFormService().getFormByUuid(formUuid);
         if (form == null) {
             MuzimaFormService muzimaFormService = Context.getService(MuzimaFormService.class);
@@ -322,35 +409,39 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
                 encounter.setEncounterType(formDefinition.getEncounterType());
             } else {
                 log.info("Unable to find form using the uuid: " + formUuid + ". Setting the form field to null!");
-                String encounterTypeString = JsonUtils.readAsString(encounterPayload, "$['encounter.type_id']");
+                String encounterTypeString = JsonUtils.readAsString(encounterPayload, "$['encounter']['encounter.type_id']");
                 int encounterTypeId = NumberUtils.toInt(encounterTypeString, -999);
                 EncounterType encounterType = Context.getEncounterService().getEncounterType(encounterTypeId);
                 if (encounterType == null) {
-                    throw new QueueProcessorException("Unable to find encounter type using the id: " + encounterTypeString);
+                    queueProcessorException.addException(new Exception("Unable to find encounter type using the id: " + encounterTypeString));
+                } else {
+                    encounter.setEncounterType(encounterType);
                 }
-                encounter.setEncounterType(encounterType);
             }
         } else {
             encounter.setForm(form);
             encounter.setEncounterType(form.getEncounterType());
         }
 
-        String providerString = JsonUtils.readAsString(encounterPayload, "$['encounter.provider_id']");
+        String providerString = JsonUtils.readAsString(encounterPayload, "$['encounter']['encounter.provider_id']");
         User user = Context.getUserService().getUserByUsername(providerString);
         if (user == null) {
-            throw new QueueProcessorException("Unable to find user using the id: " + providerString);
+            queueProcessorException.addException(new Exception("Unable to find user using the id: " + providerString));
+        } else {
+            encounter.setCreator(user);
+            encounter.setProvider(user);
         }
-        encounter.setProvider(user);
 
-        String locationString = JsonUtils.readAsString(encounterPayload, "$['encounter.location_id']");
+        String locationString = JsonUtils.readAsString(encounterPayload, "$['encounter']['encounter.location_id']");
         int locationId = NumberUtils.toInt(locationString, -999);
         Location location = Context.getLocationService().getLocation(locationId);
         if (location == null) {
-            throw new QueueProcessorException("Unable to find encounter location using the id: " + locationString);
+            queueProcessorException.addException(new Exception("Unable to find encounter location using the id: " + locationString));
+        } else {
+            encounter.setLocation(location);
         }
-        encounter.setLocation(location);
 
-        Date encounterDatetime = JsonUtils.readAsDate(encounterPayload, "$['encounter.encounter_datetime']");
+        Date encounterDatetime = JsonUtils.readAsDate(encounterPayload, "$['encounter']['encounter.encounter_datetime']");
         encounter.setEncounterDatetime(encounterDatetime);
     }
 
@@ -367,5 +458,10 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
     @Override
     public boolean accept(final QueueData queueData) {
         return StringUtils.equals(DISCRIMINATOR_VALUE, queueData.getDiscriminator());
+    }
+
+    @Override
+    public String getDiscriminator() {
+        return DISCRIMINATOR_VALUE;
     }
 }
