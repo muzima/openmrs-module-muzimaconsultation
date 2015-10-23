@@ -1,4 +1,4 @@
-function CreateConsultationCtrl($scope, $location, $person, $notification) {
+function CreateConsultationCtrl($scope, $location, $person, $notification, $patient) {
     // initialize the page
     $scope.mode = "compose";
 
@@ -15,6 +15,11 @@ function CreateConsultationCtrl($scope, $location, $person, $notification) {
             }
         });
 
+    $patient.getPatients($scope.patient).
+        then(function (response) {
+            $scope.patients = response.data;
+        });
+
     $person.getAuthenticatedPerson().
         then(function (response) {
             $scope.sender = response.data.name;
@@ -27,11 +32,18 @@ function CreateConsultationCtrl($scope, $location, $person, $notification) {
         if (compose.recipient && compose.recipient !== 'undefined') {
             recipient = compose.recipient.uuid;
         }
+
+        var patient = null;
+        if ($scope.compose.patient && $scope.compose.patient !== 'undefined') {
+            patient = $scope.compose.patient.uuid;
+        }
+
         var recipientRole = null;
         if (compose.role && compose.role !== 'undefined') {
             recipientRole = compose.role.uuid;
         }
-        $notification.sendNotification(recipient, recipientRole, compose.subject, compose.source, compose.payload).
+
+        $notification.sendNotification(recipient, recipientRole, compose.subject, compose.source, compose.payload, patient).
             then(function () {
                 $location.path('/consults/outgoing/false/role/false');
             });
@@ -40,6 +52,13 @@ function CreateConsultationCtrl($scope, $location, $person, $notification) {
     $scope.cancel = function () {
         $location.path('/consults/outgoing/false/role/false');
     };
+
+    $scope.$watch('compose.patient', function (param, paramOld) {
+        $patient.getPatients(param).
+            then(function (response) {
+                $scope.patients = response.data;
+            });
+    }, true);
 }
 
 function EditConsultationCtrl($scope, $location, $person, $routeParams, $notification) {
@@ -58,9 +77,10 @@ function EditConsultationCtrl($scope, $location, $person, $routeParams, $notific
     // actions
     $scope.reply = function () {
         $scope.mode = "reply";
-        // pull sender and recipient information from the notification
+        // pull sender, recipient and patient information from the notification
         var notification = $scope.notification;
         // we're replying an incoming notification
+        $scope.patient = notification.patient.name;
         $scope.recipient = notification.sender.name;
         if (notification.recipient && notification.recipient !== 'undefined') {
             $scope.sender = notification.recipient.name;
@@ -88,7 +108,9 @@ function EditConsultationCtrl($scope, $location, $person, $routeParams, $notific
             recipient = $scope.notification.recipient.uuid;
         }
 
-        $notification.sendNotification(recipient, null, subject, source, payload).
+        var patient = $scope.notification.patient.uuid;
+
+        $notification.sendNotification(recipient, null, subject, source, payload, patient).
             then(function () {
                 $location.path('/consults/outgoing/false/role/false');
             });

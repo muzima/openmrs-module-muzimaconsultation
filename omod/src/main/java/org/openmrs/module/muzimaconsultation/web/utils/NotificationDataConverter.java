@@ -15,6 +15,7 @@ package org.openmrs.module.muzimaconsultation.web.utils;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.openmrs.Patient;
 import org.openmrs.Person;
 import org.openmrs.Role;
 import org.openmrs.api.context.Context;
@@ -59,6 +60,14 @@ public class NotificationDataConverter {
                 roleObject.put("uuid", role.getUuid());
                 roleObject.put("name", role.getRole());
                 converted.put("role", roleObject);
+            }
+
+            Patient patient = notificationData.getPatient();
+            if (patient != null) {
+                Map<String, Object> patientObject = new HashMap<String, Object>();
+                patientObject.put("uuid", patient.getUuid());
+                patientObject.put("name", patient.getPersonName().getFullName());
+                converted.put("patient", patientObject);
             }
 
             String datetime = Context.getDateFormat().format(notificationData.getDateCreated());

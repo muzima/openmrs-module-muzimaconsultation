@@ -14,6 +14,7 @@
 package org.openmrs.module.muzimaconsultation.web.controller;
 
 import org.apache.commons.lang.StringUtils;
+import org.openmrs.Patient;
 import org.openmrs.Person;
 import org.openmrs.Role;
 import org.openmrs.api.context.Context;
@@ -59,11 +60,13 @@ public class NotificationController {
         String source = String.valueOf(request.get("source"));
         String subject = String.valueOf(request.get("subject"));
         String payload = String.valueOf(request.get("payload"));
+        String patientUuid = String.valueOf(request.get("patient"));
 
         DataService service = Context.getService(DataService.class);
         Person sender = Context.getAuthenticatedUser().getPerson();
         Person recipient = Context.getPersonService().getPersonByUuid(recipientUuid);
         Role role = Context.getUserService().getRoleByUuid(roleUuid);
+        Patient patient = Context.getPatientService().getPatientByUuid(patientUuid);
         NotificationData notificationData = new NotificationData();
         notificationData.setRole(role);
         notificationData.setPayload(payload);
@@ -73,6 +76,7 @@ public class NotificationController {
         }
         notificationData.setStatus(status);
         notificationData.setSource(source);
+        notificationData.setPatient(patient);
         notificationData.setSender(sender);
         notificationData.setReceiver(recipient);
         service.saveNotificationData(notificationData);
