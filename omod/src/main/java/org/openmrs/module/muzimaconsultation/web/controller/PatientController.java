@@ -46,13 +46,16 @@ public class PatientController {
                 return null;
             }
         }
-        PatientService patientService = Context.getPatientService();
-        List<Patient> patients = patientService.getPatients(param);//,null,null,false);
-        List<Object> objects = new ArrayList<Object>();
-        for (Patient patient : patients) {
-            objects.add(convertPatient(patient));
+        if (Context.isAuthenticated()) {
+            PatientService patientService = Context.getPatientService();
+            List<Patient> patients = patientService.getPatients(param, param, null,false);
+            List<Object> objects = new ArrayList<Object>();
+            for (Patient patient : patients) {
+                objects.add(convertPatient(patient));
+            }
+            return objects;
         }
-        return objects;
+        return null;
     }
 
     private Map<String, Object> convertPatient(final Patient patient) {
