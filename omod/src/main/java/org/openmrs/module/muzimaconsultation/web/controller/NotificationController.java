@@ -53,28 +53,30 @@ public class NotificationController {
 
     @RequestMapping(method = RequestMethod.POST)
     public void save(final @RequestBody Map<String, Object> request) throws IOException {
-        String recipientUuid = String.valueOf(request.get("recipient"));
-        String roleUuid = String.valueOf(request.get("role"));
-        String status = String.valueOf(request.get("status"));
-        String source = String.valueOf(request.get("source"));
-        String subject = String.valueOf(request.get("subject"));
-        String payload = String.valueOf(request.get("payload"));
+        if(Context.isAuthenticated()) {
+            String recipientUuid = String.valueOf(request.get("recipient"));
+            String roleUuid = String.valueOf(request.get("role"));
+            String status = String.valueOf(request.get("status"));
+            String source = String.valueOf(request.get("source"));
+            String subject = String.valueOf(request.get("subject"));
+            String payload = String.valueOf(request.get("payload"));
 
-        DataService service = Context.getService(DataService.class);
-        Person sender = Context.getAuthenticatedUser().getPerson();
-        Person recipient = Context.getPersonService().getPersonByUuid(recipientUuid);
-        Role role = Context.getUserService().getRoleByUuid(roleUuid);
-        NotificationData notificationData = new NotificationData();
-        notificationData.setRole(role);
-        notificationData.setPayload(payload);
-        notificationData.setSubject(subject);
-        if (status == null || status.trim().length() < 1 || status.trim().equalsIgnoreCase("null")) {
-            status = "unread";
+            DataService service = Context.getService(DataService.class);
+            Person sender = Context.getAuthenticatedUser().getPerson();
+            Person recipient = Context.getPersonService().getPersonByUuid(recipientUuid);
+            Role role = Context.getUserService().getRoleByUuid(roleUuid);
+            NotificationData notificationData = new NotificationData();
+            notificationData.setRole(role);
+            notificationData.setPayload(payload);
+            notificationData.setSubject(subject);
+            if (status == null || status.trim().length() < 1 || status.trim().equalsIgnoreCase("null")) {
+                status = "unread";
+            }
+            notificationData.setStatus(status);
+            notificationData.setSource(source);
+            notificationData.setSender(sender);
+            notificationData.setReceiver(recipient);
+            service.saveNotificationData(notificationData);
         }
-        notificationData.setStatus(status);
-        notificationData.setSource(source);
-        notificationData.setSender(sender);
-        notificationData.setReceiver(recipient);
-        service.saveNotificationData(notificationData);
     }
 }

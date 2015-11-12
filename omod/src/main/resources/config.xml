@@ -51,6 +51,13 @@
 		<file>messages_es.properties</file>
 	</messages>
 	<!-- /Internationalization -->
-
+	<privilege>
+		<name>Edit Consultation</name>
+		<description>Ability to Create or Edit consultations</description>
+	</privilege>
+	<privilege>
+		<name>View Consultation</name>
+		<description>Ability to View consultations</description>
+	</privilege>
 </module>
 
