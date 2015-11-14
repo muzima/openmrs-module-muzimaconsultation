@@ -1,5 +1,6 @@
 <%@ include file="/WEB-INF/template/include.jsp" %>
 <%@ include file="/WEB-INF/template/header.jsp" %>
+<openmrs:require privilege="View Consultation" otherwise="/index.htm" redirect="/module/muzimaconsultation/view.list"/>
 <openmrs:htmlInclude file="/moduleResources/muzimaconsultation/styles/custom/custom.css"/>
 <openmrs:htmlInclude file="/moduleResources/muzimaconsultation/styles/bootstrap/css/bootstrap.css"/>
 

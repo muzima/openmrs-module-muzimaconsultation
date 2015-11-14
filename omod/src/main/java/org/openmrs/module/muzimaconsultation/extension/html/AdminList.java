@@ -16,6 +16,7 @@ package org.openmrs.module.muzimaconsultation.extension.html;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.openmrs.api.context.Context;
 import org.openmrs.module.Extension;
 import org.openmrs.module.web.extension.AdministrationSectionExt;
 
@@ -44,7 +45,9 @@ public class AdminList extends AdministrationSectionExt {
 	 */
 	public Map<String, String> getLinks() {
 		LinkedHashMap<String, String> map = new LinkedHashMap<String, String>();
-		map.put("/module/muzimaconsultation/view.list", "muzimaconsultation.view");
+		if(Context.hasPrivilege("View Consultation")){
+			map.put("/module/muzimaconsultation/view.list", "muzimaconsultation.view");
+		}
 		return map;
 	}
 	
