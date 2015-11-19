@@ -3,6 +3,9 @@
 ## IntelliJ directory format
 .idea/
 
+## Eclipse directory format
+.settings/
+
 ## IntelliJ file project format
 *.ipr
 *.iws

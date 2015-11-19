@@ -166,6 +166,7 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
         }
         String subject = "New Consultation on " + patientName + " by " + senderName;
         notificationData.setSubject(subject);
+        notificationData.setPatient(patient);
 
         notificationData.setPayload("Dear " + recipientName + ",<br/>"
                 + "<br/>Please review the newly created consultation request for the following patient:"

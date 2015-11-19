@@ -29,12 +29,21 @@ muzimaconsultation.factory('$person', function($http) {
     }
 });
 
+muzimaconsultation.factory('$patient', function($http) {
+     var getPatients = function(param) {
+        return $http.get('patients.json?param=' + param);
+    };
+    return {
+        getPatients: getPatients
+    }
+});
+
 muzimaconsultation.factory('$notification', function ($http) {
     var getNotificationByUuid = function (uuid) {
         return $http.get('notification.json?uuid=' + uuid);
     };
-    var sendNotification = function (recipient, role, subject, source, payload) {
-        return $http.post('notification.json', {"recipient": recipient, "role": role, "subject": subject, "source": source, "payload": payload});
+    var sendNotification = function (recipient, role, subject, source, payload, patient) {
+        return $http.post('notification.json', {"recipient": recipient, "role": role, "subject": subject, "source": source, "payload": payload, "patient": patient});
     };
     return {
         getNotificationByUuid: getNotificationByUuid,
