@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.openmrs.module</groupId>
 		<artifactId>muzimaconsultation</artifactId>
-		<version>1.0.1-SNAPSHOT</version>
+		<version>1.0.2-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>muzimaconsultation-api</artifactId>
@@ -17,9 +17,9 @@
 		<!--
 		Add other dependencies from parent's pom:
 		<dependency>
-			<groupId>org.other.library</groupId> 
+			<groupId>org.other.library</groupId>
 			<artifactId>library-name</artifactId>
-		</dependency> 
+		</dependency>
 		-->
 		<!-- Begin OpenMRS modules -->
         <dependency>
@@ -69,7 +69,7 @@
 		</dependency>
 		<!-- End OpenMRS core -->
 	</dependencies>
-	
+
 	<build>
 		<resources>
 			<resource>
