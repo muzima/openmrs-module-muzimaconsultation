@@ -44,10 +44,10 @@ import org.openmrs.module.muzima.model.NotificationData;
 import org.openmrs.module.muzima.model.QueueData;
 import org.openmrs.module.muzima.model.handler.QueueDataHandler;
 import org.openmrs.module.muzima.web.resource.utils.JsonUtils;
-import org.openmrs.module.muzimaforms.MuzimaForm;
-import org.openmrs.module.muzimaforms.api.MuzimaFormService;
-import org.openmrs.module.muzimaregistration.api.RegistrationDataService;
-import org.openmrs.module.muzimaregistration.api.model.RegistrationData;
+import org.openmrs.module.muzima.model.MuzimaForm;
+import org.openmrs.module.muzima.api.service.MuzimaFormService;
+import org.openmrs.module.muzima.api.service.RegistrationDataService;
+import org.openmrs.module.muzima.model.RegistrationData;
 import org.openmrs.obs.ComplexData;
 import org.openmrs.web.WebConstants;
 import org.springframework.stereotype.Component;
@@ -403,7 +403,7 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
         Form form = Context.getFormService().getFormByUuid(formUuid);
         if (form == null) {
             MuzimaFormService muzimaFormService = Context.getService(MuzimaFormService.class);
-            MuzimaForm muzimaForm = muzimaFormService.findByUniqueId(formUuid);
+            MuzimaForm muzimaForm = muzimaFormService.getFormByUuid(formUuid);
             if (muzimaForm != null) {
                 Form formDefinition = Context.getFormService().getFormByUuid(muzimaForm.getForm());
                 encounter.setForm(formDefinition);

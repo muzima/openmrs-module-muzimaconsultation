@@ -24,18 +24,8 @@
 		<!-- Begin OpenMRS modules -->
         <dependency>
             <groupId>org.openmrs.module</groupId>
-            <artifactId>muzima-omod</artifactId>
+            <artifactId>muzimacore-omod</artifactId>
         </dependency>
-
-        <dependency>
-            <groupId>org.openmrs.module</groupId>
-            <artifactId>muzimaregistration-api</artifactId>
-        </dependency>
-
-		<dependency>
-			<groupId>org.openmrs.module</groupId>
-			<artifactId>muzimaforms-api</artifactId>
-		</dependency>
 		<!-- End OpenMRS modules -->
 
 		<!-- Begin OpenMRS core -->

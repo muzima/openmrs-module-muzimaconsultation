@@ -30,7 +30,7 @@
 		</dependency>
         <dependency>
             <groupId>org.openmrs.module</groupId>
-            <artifactId>muzima-omod</artifactId>
+            <artifactId>muzimacore-omod</artifactId>
         </dependency>
 		<!-- End OpenMRS modules -->
 
