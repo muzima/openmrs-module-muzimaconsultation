@@ -27,9 +27,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import sun.rmi.runtime.Log;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * TODO: Write brief description about the class here.
@@ -37,6 +39,8 @@ import java.util.Map;
 @Controller
 @RequestMapping(value = "module/muzimaconsultation/notification.json")
 public class NotificationController {
+
+    Logger logger = Logger.getLogger("NotificationController");
 
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
@@ -63,6 +67,7 @@ public class NotificationController {
             String payload = String.valueOf(request.get("payload"));
             String patientUuid = String.valueOf(request.get("patient"));
 
+
             DataService service = Context.getService(DataService.class);
             Person sender = Context.getAuthenticatedUser().getPerson();
             Person recipient = Context.getPersonService().getPersonByUuid(recipientUuid);
@@ -80,6 +85,9 @@ public class NotificationController {
             notificationData.setPatient(patient);
             notificationData.setSender(sender);
             notificationData.setReceiver(recipient);
+
+            logger.log(Log.VERBOSE,"Patient"+patient);
+
             service.saveNotificationData(notificationData);
         }
     }
