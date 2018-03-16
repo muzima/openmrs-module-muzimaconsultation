@@ -39,16 +39,18 @@ public class PatientController {
     @RequestMapping(value = "/module/muzimaconsultation/patients.json", method = RequestMethod.GET)
     @ResponseBody
     public List<Object> getAllPatients(final @RequestParam(value = "param", required = false) String param) {
-        if (StringUtils.isEmpty(param) || param.equalsIgnoreCase("undefined")) {
+        /*if (StringUtils.isEmpty(param) || param.equalsIgnoreCase("undefined")) {
             return null;
         } else {
             if (param.length() < 3) {
                 return null;
             }
-        }
+        }*/
+        String mparam ="Fel";
         if (Context.isAuthenticated()) {
             PatientService patientService = Context.getPatientService();
-            List<Patient> patients = patientService.getPatients(param, param, null,false);
+            //List<Patient> patients = patientService.getPatients(mparam, mparam, null,false);
+            List<Patient> patients = patientService.getAllPatients();
             List<Object> objects = new ArrayList<Object>();
             for (Patient patient : patients) {
                 objects.add(convertPatient(patient));

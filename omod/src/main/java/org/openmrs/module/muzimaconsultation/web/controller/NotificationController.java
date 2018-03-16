@@ -31,7 +31,8 @@ import sun.rmi.runtime.Log;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import  org.slf4j.LoggerFactory;
 
 /**
  * TODO: Write brief description about the class here.
@@ -40,7 +41,7 @@ import java.util.logging.Logger;
 @RequestMapping(value = "module/muzimaconsultation/notification.json")
 public class NotificationController {
 
-    Logger logger = Logger.getLogger("NotificationController");
+    Logger logger = LoggerFactory.getLogger(this.getClass().getSimpleName());
 
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
@@ -86,7 +87,7 @@ public class NotificationController {
             notificationData.setSender(sender);
             notificationData.setReceiver(recipient);
 
-            logger.log(Log.VERBOSE,"Patient"+patient);
+            logger.error("Saving :Patient"+patient);
 
             service.saveNotificationData(notificationData);
         }

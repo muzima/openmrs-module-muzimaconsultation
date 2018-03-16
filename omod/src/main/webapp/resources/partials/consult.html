@@ -84,7 +84,7 @@
                         <div>
                             <label for="compose-patient"><strong>Patient for Consultation</strong></label>
                             <input id="compose-patient" class="span10" placeholder="Patient Name or Identifier" type="text"
-                                   ng-model="$parent.compose.patient"
+                                   ng-model="compose.patient"
                                    typeahead="patient as patient.name for patient in patients | filter:$viewValue">
                         </div>
                         <div>

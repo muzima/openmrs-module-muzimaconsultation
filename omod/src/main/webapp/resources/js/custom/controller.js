@@ -15,8 +15,12 @@ function CreateConsultationCtrl($scope, $location, $person, $notification, $pati
             }
         });
 
+    console.log("search patients");
+    console.log($scope.patient);
     $patient.getPatients($scope.patient).
         then(function (response) {
+        console.log("response.data");
+        console.log(JSON.stringify(response.data));
             $scope.patients = response.data;
         });
 
@@ -34,8 +38,10 @@ function CreateConsultationCtrl($scope, $location, $person, $notification, $pati
         }
 
         var patient = null;
-        if ($scope.compose.patient && $scope.compose.patient !== 'undefined') {
-            patient = $scope.compose.patient.uuid;
+            console.log("compose: "+JSON.stringify(compose));
+        if (compose.patient !=="" && compose.patient !== 'undefined') {
+            patient = compose.patient.uuid;
+            console.log("patient uuid: "+patient);
         }
 
         var recipientRole = null;

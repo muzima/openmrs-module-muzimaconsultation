@@ -31,6 +31,5 @@ public interface ConsultationService extends OpenmrsService {
      
 	/*
 	 * Add service methods here
-	 * 
 	 */
 }
