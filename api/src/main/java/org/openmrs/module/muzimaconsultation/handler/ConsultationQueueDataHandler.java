@@ -21,19 +21,7 @@ import org.apache.commons.lang.math.NumberUtils;
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.openmrs.Concept;
-import org.openmrs.Encounter;
-import org.openmrs.EncounterType;
-import org.openmrs.Form;
-import org.openmrs.Location;
-import org.openmrs.Obs;
-import org.openmrs.Patient;
-import org.openmrs.PatientIdentifier;
-import org.openmrs.PatientIdentifierType;
-import org.openmrs.Person;
-import org.openmrs.PersonName;
-import org.openmrs.Role;
-import org.openmrs.User;
+import org.openmrs.*;
 import org.openmrs.annotation.Handler;
 import org.openmrs.api.LocationService;
 import org.openmrs.api.PatientService;
@@ -151,7 +139,7 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
     }
 
     private void generateNotification(final String sourceUuid, final Encounter encounter, final Person recipient, final Role role) {
-        Person sender = encounter.getProvider();
+        Person sender = encounter.getProvidersByRole(role);
         NotificationData notificationData = new NotificationData();
         notificationData.setRole(role);
 

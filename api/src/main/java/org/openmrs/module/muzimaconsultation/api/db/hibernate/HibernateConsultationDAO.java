@@ -12,10 +12,10 @@
  * Copyright (C) OpenMRS, LLC.  All Rights Reserved.
  */
 package org.openmrs.module.muzimaconsultation.api.db.hibernate;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.SessionFactory;
+import org.openmrs.api.db.hibernate.DbSession;
 import org.openmrs.module.muzimaconsultation.api.db.ConsultationDAO;
 
 /**
@@ -24,19 +24,19 @@ import org.openmrs.module.muzimaconsultation.api.db.ConsultationDAO;
 public class HibernateConsultationDAO implements ConsultationDAO {
 	protected final Log log = LogFactory.getLog(this.getClass());
 	
-	private SessionFactory sessionFactory;
+	private DbSession dbSession;
 	
 	/**
      * @param sessionFactory the sessionFactory to set
      */
-    public void setSessionFactory(SessionFactory sessionFactory) {
-	    this.sessionFactory = sessionFactory;
+    public void setSessionFactory(DbSession sessionFactory) {
+	    this.dbSession = sessionFactory;
     }
     
 	/**
      * @return the sessionFactory
      */
     public SessionFactory getSessionFactory() {
-	    return sessionFactory;
+	    return dbSession.getSessionFactory();
     }
 }

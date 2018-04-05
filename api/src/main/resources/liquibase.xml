@@ -9,4 +9,20 @@
         for a list of supported elements and attributes
     -->
     
+    <changeSet id="1" author="samuelowino">
+        
+        <createTable tableName="Message">
+            <column name="id" type="int"/>
+            <column name="uuid" type="java.lang.String"/>
+            <column name="source" type="java.lang.String"/>
+            <column name="sender" type="java.lang.String"/>
+            <column name="receiver" type="java.lang.String"/>
+            <column name="subject" type="java.lang.String"/>
+            <column name="senderDate" type="java.lang.String"/>
+            <column name="senderTime" type="java.lang.String"/>
+            <column name="voided" type="java.lang.Boolean"/>
+                
+        </createTable>
+    </changeSet>
+    
 </databaseChangeLog>
