@@ -70,22 +70,43 @@
                                    ng-model="sender" disabled>
                         </div>
                         <div>
-                            <label for="compose-recipient"><strong>Recipient</strong></label>
-                            <input id="compose-recipient" class="span10" placeholder="Recipient Name" type="text"
-                                   ng-model="compose.recipient"
-                                   typeahead="person as person.name for person in persons | filter:$viewValue">
+                            <label ><strong>Recipient Type</strong>
+                                <label><input type="radio" ng-model="compose.recipientType" ng-change="clearRecipientModel()"  name="compose-recipient-type" value="patient"
+                                               checked="checked"> Patient</label>
+                            </label>
+                            <label>
+                                <label><input type="radio" ng-model="compose.recipientType" ng-change="clearRecipientModel()" name="compose-recipient-type" value="provider"
+                                              >Provider</label>
+                            </label>
                         </div>
-                        <div>
-                            <label for="compose-role"><strong>Targeted Role</strong></label>
-                            <input id="compose-role" class="span10" placeholder="Targeted Role Name" type="text"
-                                   ng-model="compose.role"
-                                   typeahead="role as role.name for role in roles | filter:$viewValue">
+                        <div id="provider-compose-details-" style="display:none;" ng-show="!isProviderRecipientType()">
+                            <div>
+                                <label for="compose-recipient-patient"><strong>Recipient Patient</strong></label>
+                                <input id="compose-recipient-patient" class="span10" placeholder="Patient Name or Identifier" type="text"
+                                       ng-model="$parent.compose.recipient"
+                                       typeahead="patient as patient.name for patient in patients | filter:$viewValue">
+                            </div>
+
                         </div>
-                        <div>
-                            <label for="compose-patient"><strong>Patient for Consultation</strong></label>
-                            <input id="compose-patient" class="span10" placeholder="Patient Name or Identifier" type="text"
-                                   ng-model="$parent.compose.patient"
-                                   typeahead="patient as patient.name for patient in patients | filter:$viewValue">
+                        <div id="provider-compose-details-div" style="display:none;" ng-show="isProviderRecipientType()">
+                            <div>
+                                <label for="compose-recipient-provider"><strong>Recipient Provider</strong></label>
+                                <input id="compose-recipient-provider" class="span10" placeholder="Recipient Name" type="text"
+                                       ng-model="compose.recipient"
+                                       typeahead="provider as provider.name for provider in providers | filter:$viewValue">
+                            </div>
+                            <div>
+                                <label for="compose-role"><strong>Targeted Role</strong></label>
+                                <input id="compose-role" class="span10" placeholder="Targeted Role Name" type="text"
+                                       ng-model="compose.role"
+                                       typeahead="role as role.name for role in roles | filter:$viewValue">
+                            </div>
+                            <div>
+                                <label for="compose-patient"><strong>Patient for Consultation</strong></label>
+                                <input id="compose-patient" class="span10" placeholder="Patient Name or Identifier" type="text"
+                                       ng-model="$parent.compose.patient"
+                                       typeahead="patient as patient.name for patient in patients | filter:$viewValue">
+                            </div>
                         </div>
                         <div>
                             <label for="compose-source"><strong>Source</strong></label>
@@ -161,32 +182,37 @@
                     <div class="span5">
                         <div>
                             <label for="reply-sender"><strong>Sender</strong></label>
-                            <input id="reply-sender" class="span10" type="text"
+                            <input id="reply-sender" class="span12" type="text"
                                    ng-model="sender" disabled>
                         </div>
                         <div>
+                            <label for="reply-sender"><strong>Recipient Type</strong></label>
+                            <input id="reply-recipient-type" class="span12" type="text"
+                                   ng-model="recipientType" disabled>
+                        </div>
+                        <div>
                             <label for="reply-recipient"><strong>Recipient</strong></label>
-                            <input id="reply-recipient" class="span10" type="text"
+                            <input id="reply-recipient" class="span12" type="text"
                                    ng-model="recipient" disabled>
                         </div>
                         <div>
                             <label for="reply-role"><strong>Targeted Role</strong></label>
-                            <input id="reply-role" class="span10" type="text"
+                            <input id="reply-role" class="span12" type="text"
                                    ng-model="role" disabled>
                         </div>
                         <div>
                             <label for="reply-patient"><strong>Patient for Consultation</strong></label>
-                            <input id="reply-patient" class="span10" type="text"
+                            <input id="reply-patient" class="span12" type="text"
                                    ng-model="patient" disabled>
                         </div>
                         <div>
                             <label for="reply-source"><strong>Source</strong></label>
-                            <input id="reply-source" class="span10" type="text"
+                            <input id="reply-source" class="span12" type="text"
                                    ng-model="source" disabled>
                         </div>
                         <div>
                             <label for="reply-subject"><strong>Subject</strong></label>
-                            <input id="reply-subject" class="span10" type="text"
+                            <input id="reply-subject" class="span12" type="text"
                                    ng-model="subject" disabled>
                         </div>
                     </div>

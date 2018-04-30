@@ -15,13 +15,16 @@ package org.openmrs.module.muzimaconsultation.web.controller;
 
 import org.apache.commons.lang.StringUtils;
 import org.openmrs.Person;
+import org.openmrs.Provider;
 import org.openmrs.Role;
 import org.openmrs.User;
+import org.openmrs.api.ProviderService;
 import org.openmrs.api.UserService;
 import org.openmrs.api.context.Context;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.ArrayList;
@@ -83,6 +86,25 @@ public class UserController {
         Map<String, Object> response = new HashMap<String, Object>();
         response.put("uuid", role.getUuid());
         response.put("name", role.getRole());
+        return response;
+    }
+
+    @RequestMapping(value = "/module/muzimaconsultation/providers.json", method = RequestMethod.GET)
+    @ResponseBody
+    public List<Object> getAllProviders() {
+        ProviderService providerService = Context.getProviderService();
+        List<Provider> providers = providerService.getAllProviders();
+        List<Object> objects = new ArrayList<Object>();
+        for (Provider provider : providers) {
+            objects.add(converProvider(provider));
+        }
+        return objects;
+    }
+
+    private Map<String, Object> converProvider(final Provider provider) {
+        Map<String, Object> response = new HashMap<String, Object>();
+        response.put("uuid", provider.getUuid());
+        response.put("name", provider.getName());
         return response;
     }
 }

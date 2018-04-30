@@ -22,10 +22,14 @@ muzimaconsultation.factory('$person', function($http) {
     var getAllRoles = function() {
         return $http.get("roles.json");
     };
+    var getAllProviders = function() {
+        return $http.get("providers.json");
+    };
     return {
         getAuthenticatedPerson: getAuthenticatedPerson,
         getAllPersons: getAllPersons,
-        getAllRoles: getAllRoles
+        getAllRoles: getAllRoles,
+        getAllProviders: getAllProviders
     }
 });
 
@@ -42,8 +46,8 @@ muzimaconsultation.factory('$notification', function ($http) {
     var getNotificationByUuid = function (uuid) {
         return $http.get('notification.json?uuid=' + uuid);
     };
-    var sendNotification = function (recipient, role, subject, source, payload, patient) {
-        return $http.post('notification.json', {"recipient": recipient, "role": role, "subject": subject, "source": source, "payload": payload, "patient": patient});
+    var sendNotification = function (recipient, recipientType, role, subject, source, payload, patient) {
+        return $http.post('notification.json', {"recipient": recipient,"recipientType":recipientType, "role": role, "subject": subject, "source": source, "payload": payload, "patient": patient});
     };
     return {
         getNotificationByUuid: getNotificationByUuid,

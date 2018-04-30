@@ -16,6 +16,7 @@ package org.openmrs.module.muzimaconsultation.web.controller;
 import org.apache.commons.lang.StringUtils;
 import org.openmrs.Patient;
 import org.openmrs.Person;
+import org.openmrs.Provider;
 import org.openmrs.Role;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.muzima.api.service.DataService;
@@ -60,12 +61,23 @@ public class NotificationController {
     public void save(final @RequestBody Map<String, Object> request) throws IOException {
         if(Context.isAuthenticated()) {
             String recipientUuid = String.valueOf(request.get("recipient"));
+
             String roleUuid = String.valueOf(request.get("role"));
             String status = String.valueOf(request.get("status"));
             String source = String.valueOf(request.get("source"));
             String subject = String.valueOf(request.get("subject"));
             String payload = String.valueOf(request.get("payload"));
-            String patientUuid = String.valueOf(request.get("patient"));
+            String patientUuid = "";
+            if(String.valueOf(request.get("recipientType")).equals("patient")){
+                patientUuid = recipientUuid;
+            }else {
+                patientUuid = String.valueOf(request.get("patient"));
+                if(!subject.substring(0,3).equals("Re:")) {
+                    Provider provider = Context.getProviderService().getProviderByUuid(recipientUuid);
+                    Person person = Context.getPersonService().getPerson(provider.getPerson().getId());
+                    recipientUuid = person.getUuid();
+                }
+            }
 
 
             DataService service = Context.getService(DataService.class);

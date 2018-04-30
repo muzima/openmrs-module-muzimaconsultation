@@ -15,6 +15,19 @@ function CreateConsultationCtrl($scope, $location, $person, $notification, $pati
             }
         });
 
+    $person.getAllProviders().
+        then(function(response) {
+            $scope.providers = response.data;
+            if ($scope.providers.length > 1) {
+                $scope.selectedProvider = $scope.providers[0];
+            }
+        });
+
+
+    $scope.compose = {
+          recipientType : 'patient',
+        };
+
     $patient.getPatients($scope.patient).
         then(function (response) {
             $scope.patients = response.data;
@@ -24,6 +37,14 @@ function CreateConsultationCtrl($scope, $location, $person, $notification, $pati
         then(function (response) {
             $scope.sender = response.data.name;
         });
+
+    $scope.isProviderRecipientType=function(){
+         return $scope.compose.recipientType !== 'undefined' && $scope.compose.recipientType == "provider";
+    }
+
+    $scope.clearRecipientModel=function(){
+         $scope.compose.recipient = "";
+    }
 
     // actions
     $scope.send = function (compose) {
@@ -38,12 +59,17 @@ function CreateConsultationCtrl($scope, $location, $person, $notification, $pati
             patient = $scope.compose.patient.uuid;
         }
 
+        var recipientType = null;
+        if (compose.recipientType && compose.recipientType !== 'undefined') {
+            recipientType = $scope.compose.recipientType;
+        }
+
         var recipientRole = null;
         if (compose.role && compose.role !== 'undefined') {
             recipientRole = compose.role.uuid;
         }
 
-        $notification.sendNotification(recipient, recipientRole, compose.subject, compose.source, compose.payload, patient).
+        $notification.sendNotification(recipient, recipientType, recipientRole, compose.subject, compose.source, compose.payload, patient).
             then(function () {
                 $location.path('/consults/outgoing/false/role/false');
             });
@@ -54,6 +80,14 @@ function CreateConsultationCtrl($scope, $location, $person, $notification, $pati
     };
 
     $scope.$watch('compose.patient', function (param, paramOld) {
+        $patient.getPatients(param).
+            then(function (response) {
+                $scope.patients = response.data;
+            });
+    }, true);
+
+
+    $scope.$watch('compose.recipient', function (param, paramOld) {
         $patient.getPatients(param).
             then(function (response) {
                 $scope.patients = response.data;
@@ -96,6 +130,15 @@ function EditConsultationCtrl($scope, $location, $person, $routeParams, $notific
             $scope.recipient = notification.recipient.name;
         }
 
+        $scope.setRecipientType = function(){
+            if(notification.patient.name == notification.sender.name){
+                $scope.recipientType="patient";
+            }else{
+                $scope.recipientType="provider";
+            }
+        };
+        $scope.setRecipientType();
+
         $scope.source = notification.source;
         $scope.subject = "Re: " + notification.subject;
 
@@ -110,7 +153,17 @@ function EditConsultationCtrl($scope, $location, $person, $routeParams, $notific
 
         var patient = $scope.notification.patient.uuid;
 
-        $notification.sendNotification(recipient, null, subject, source, payload, patient).
+        var recipientType = "";
+        $scope.setRecipientType = function(){
+            if(patient == recipient){
+                recipientType="patient";
+            }else{
+                recipientType="provider";
+            }
+        };
+        $scope.setRecipientType();
+
+        $notification.sendNotification(recipient, recipientType, null, subject, source, payload, patient).
             then(function () {
                 $location.path('/consults/outgoing/false/role/false');
             });
