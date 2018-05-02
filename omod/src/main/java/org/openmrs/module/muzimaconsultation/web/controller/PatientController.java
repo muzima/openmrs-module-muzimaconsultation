@@ -48,7 +48,8 @@ public class PatientController {
         }
         if (Context.isAuthenticated()) {
             PatientService patientService = Context.getPatientService();
-            List<Patient> patients = patientService.getPatients(param, param, null,false);
+            //List<Patient> patients = patientService.getPatients(param, param, null, false);
+            List<Patient> patients = patientService.getAllPatients();
             List<Object> objects = new ArrayList<Object>();
             for (Patient patient : patients) {
                 objects.add(convertPatient(patient));
