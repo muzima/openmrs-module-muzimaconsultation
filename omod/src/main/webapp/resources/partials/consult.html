@@ -82,7 +82,7 @@
                         <div id="provider-compose-details-" style="display:none;" ng-show="!isProviderRecipientType()">
                             <div>
                                 <label for="compose-recipient-patient"><strong>Recipient Patient</strong></label>
-                                <input id="compose-recipient-patient" class="span10" placeholder="Patient Name or Identifier" type="text"
+                                <input id="compose-recipient-patient" class="span10" placeholder="Patient Name or Identifier" autocomplete="off" type="text"
                                        ng-model="$parent.compose.recipient"
                                        typeahead="patient as patient.name for patient in patients | filter:$viewValue">
                             </div>
@@ -91,19 +91,19 @@
                         <div id="provider-compose-details-div" style="display:none;" ng-show="isProviderRecipientType()">
                             <div>
                                 <label for="compose-recipient-provider"><strong>Recipient Provider</strong></label>
-                                <input id="compose-recipient-provider" class="span10" placeholder="Recipient Name" type="text"
+                                <input id="compose-recipient-provider" class="span10" placeholder="Recipient Name" autocomplete="off" type="text"
                                        ng-model="compose.recipient"
                                        typeahead="provider as provider.name for provider in providers | filter:$viewValue">
                             </div>
                             <div>
                                 <label for="compose-role"><strong>Targeted Role</strong></label>
-                                <input id="compose-role" class="span10" placeholder="Targeted Role Name" type="text"
+                                <input id="compose-role" class="span10" placeholder="Targeted Role Name"  type="text"
                                        ng-model="compose.role"
                                        typeahead="role as role.name for role in roles | filter:$viewValue">
                             </div>
                             <div>
                                 <label for="compose-patient"><strong>Patient for Consultation</strong></label>
-                                <input id="compose-patient" class="span10" placeholder="Patient Name or Identifier" type="text"
+                                <input id="compose-patient" class="span10" placeholder="Patient Name or Identifier" autocomplete="off" type="text"
                                        ng-model="$parent.compose.patient"
                                        typeahead="patient as patient.name for patient in patients | filter:$viewValue">
                             </div>
@@ -193,7 +193,7 @@
                         <div>
                             <label for="reply-recipient"><strong>Recipient</strong></label>
                             <input id="reply-recipient" class="span12" type="text"
-                                   ng-model="recipient" disabled>
+                                   ng-model="recipient" autocomplete="off" disabled>
                         </div>
                         <div>
                             <label for="reply-role"><strong>Targeted Role</strong></label>
@@ -203,7 +203,7 @@
                         <div>
                             <label for="reply-patient"><strong>Patient for Consultation</strong></label>
                             <input id="reply-patient" class="span12" type="text"
-                                   ng-model="patient" disabled>
+                                   ng-model="patient" autocomplete="off" disabled>
                         </div>
                         <div>
                             <label for="reply-source"><strong>Source</strong></label>
