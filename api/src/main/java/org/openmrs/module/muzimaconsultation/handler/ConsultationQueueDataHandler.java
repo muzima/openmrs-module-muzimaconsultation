@@ -23,6 +23,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.openmrs.Concept;
 import org.openmrs.Encounter;
+import org.openmrs.EncounterProvider;
+import org.openmrs.EncounterRole;
 import org.openmrs.EncounterType;
 import org.openmrs.Form;
 import org.openmrs.Location;
@@ -32,6 +34,7 @@ import org.openmrs.PatientIdentifier;
 import org.openmrs.PatientIdentifierType;
 import org.openmrs.Person;
 import org.openmrs.PersonName;
+import org.openmrs.Provider;
 import org.openmrs.Role;
 import org.openmrs.User;
 import org.openmrs.annotation.Handler;
@@ -39,8 +42,10 @@ import org.openmrs.api.LocationService;
 import org.openmrs.api.PatientService;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.muzima.api.service.DataService;
+import org.openmrs.module.muzima.api.service.NotificationTokenService;
 import org.openmrs.module.muzima.exception.QueueProcessorException;
 import org.openmrs.module.muzima.model.NotificationData;
+import org.openmrs.module.muzima.model.NotificationToken;
 import org.openmrs.module.muzima.model.QueueData;
 import org.openmrs.module.muzima.model.handler.QueueDataHandler;
 import org.openmrs.module.muzima.web.resource.utils.JsonUtils;
@@ -54,7 +59,12 @@ import org.springframework.stereotype.Component;
 
 import javax.xml.bind.DatatypeConverter;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -62,6 +72,7 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -73,6 +84,12 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
     private static final String DISCRIMINATOR_VALUE = "json-consultation";
 
     private static final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+
+    public final static String AUTH_KEY_FCM = "AAAAyR4Iero:APA91bFF5AB_mK-8xXVQQJXyT2pQRPhfkX99d7RAhbr0mLO9qbxNXEs8uOPHQ1r5zxUM4tzCGdEmzusBPYQchA4kJ_ewe-ZoGocHlTTDP4ylb7S7yk6l9ylcv3KYcAo0MKVZ91UNw_GSFTxwCTgR15PoffbDjgv7YA";
+
+    public final static String API_URL_FCM = "https://fcm.googleapis.com/fcm/send";
+
+    private static final String DEFAULT_ENCOUNTER_ROLE = "a0b03050-c99b-11e0-9572-0800200c9a66";
 
     private final Log log = LogFactory.getLog(ConsultationQueueDataHandler.class);
 
@@ -90,19 +107,23 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
                 try {
                     Role role = null;
                     Person recipient = null;
+                    User user = null;
                     Object consultationObject = JsonUtils.readAsObject(queueData.getPayload(), "$['consultation']");
                     String recipientString = JsonUtils.readAsString(String.valueOf(consultationObject), "$['consultation.recipient']");
                     String sourceUuid = JsonUtils.readAsString(String.valueOf(consultationObject), "$['consultation.sourceUuid']");
                     String[] recipientParts = StringUtils.split(recipientString, ":");
                     if (ArrayUtils.getLength(recipientParts) == 2) {
                         if (StringUtils.equalsIgnoreCase(recipientParts[1], "u")) {
-                            User user = Context.getUserService().getUserByUsername(recipientParts[0]);
+                            user = Context.getUserService().getUserByUsername(recipientParts[0]);
                             recipient = user.getPerson();
                         } else if (StringUtils.equalsIgnoreCase(recipientParts[1], "g")) {
                             role = Context.getUserService().getRole(recipientParts[0]);
                         }
+                    }else{
+                        user = Context.getUserService().getUserByUsername(recipientString);
+                        recipient = user.getPerson();
                     }
-                    generateNotification(sourceUuid, encounter, recipient, role);
+                    generateNotification(sourceUuid, encounter, recipient, role, user);
                 } catch (Exception e) {
                     if (!e.getClass().equals(QueueProcessorException.class)) {
                         String reason = "Unable to generate notification information. Rolling back encounter.";
@@ -150,7 +171,7 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
         }
     }
 
-    private void generateNotification(final String sourceUuid, final Encounter encounter, final Person recipient, final Role role) {
+    private void generateNotification(final String sourceUuid, final Encounter encounter, final Person recipient, final Role role, final User user) {
         Person sender = encounter.getProvider();
         NotificationData notificationData = new NotificationData();
         notificationData.setRole(role);
@@ -179,6 +200,42 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
         notificationData.setSender(sender);
         notificationData.setReceiver(recipient);
         Context.getService(DataService.class).saveNotificationData(notificationData);
+
+        //Start of sending Notification
+        String authKey = AUTH_KEY_FCM;
+        String FMCurl = API_URL_FCM;
+
+        URL url = null;
+        try {
+            url = new URL(FMCurl);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setUseCaches(false);
+            conn.setDoInput(true);
+            conn.setDoOutput(true);
+
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Authorization","key="+authKey);
+            conn.setRequestProperty("Content-Type","application/json");
+
+            JSONObject json = new JSONObject();
+            NotificationTokenService notificationTokenService = Context.getService(NotificationTokenService.class);
+            List<NotificationToken> notificationTokens = notificationTokenService.getNotificationByUserId(user);
+            json.put("to",notificationTokens.get(0).getToken());
+            JSONObject info = new JSONObject();
+            info.put("title", "mUzima Consultation");
+            info.put("body", "Hello "+user.getSystemId()+" you have a consultation pending your review");
+            json.put("notification", info);
+
+            OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
+            wr.write(json.toString());
+            wr.flush();
+            conn.getInputStream();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        //End of sending Notification
     }
 
     private void processPatient(final Encounter encounter, final Object patientObject) {
@@ -429,8 +486,22 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
         if (user == null) {
             queueProcessorException.addException(new Exception("Unable to find user using the id: " + providerString));
         } else {
-            encounter.setCreator(user);
-            encounter.setProvider(user);
+              encounter.setCreator(user);
+              Provider provider = Context.getProviderService().getProviderByIdentifier(providerString);
+              String encounterRoleString = org.openmrs.module.muzima.utils.JsonUtils.readAsString(encounterPayload, "$['encounter']['encounter.provider_role_uuid']");
+              EncounterRole encounterRole = null;
+
+              if(StringUtils.isBlank(encounterRoleString)){
+                  encounterRole = Context.getEncounterService().getEncounterRoleByUuid(DEFAULT_ENCOUNTER_ROLE);
+              } else {
+                  encounterRole = Context.getEncounterService().getEncounterRoleByUuid(encounterRoleString);
+              }
+
+                if(encounterRole == null){
+                    queueProcessorException.addException(new Exception("Unable to find encounter role using the uuid: ["
+                            + encounterRoleString + "] or the default role [" + DEFAULT_ENCOUNTER_ROLE +"]"));
+                }
+              encounter.setProvider(encounterRole,provider);
         }
 
         String locationString = JsonUtils.readAsString(encounterPayload, "$['encounter']['encounter.location_id']");
