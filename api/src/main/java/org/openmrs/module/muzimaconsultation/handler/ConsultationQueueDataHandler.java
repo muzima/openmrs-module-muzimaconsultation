@@ -123,7 +123,9 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
                         user = Context.getUserService().getUserByUsername(recipientString);
                         recipient = user.getPerson();
                     }
-                    generateNotification(sourceUuid, encounter, recipient, role, user);
+                    String providerString = JsonUtils.readAsString(queueData.getPayload(), "$['encounter']['encounter.provider_id']");
+                    Provider provider = Context.getProviderService().getProviderByIdentifier(providerString);
+                    generateNotification(sourceUuid, encounter, recipient, role, user, provider.getPerson());
                 } catch (Exception e) {
                     if (!e.getClass().equals(QueueProcessorException.class)) {
                         String reason = "Unable to generate notification information. Rolling back encounter.";
@@ -171,8 +173,7 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
         }
     }
 
-    private void generateNotification(final String sourceUuid, final Encounter encounter, final Person recipient, final Role role, final User user) {
-        Person sender = encounter.getProvider();
+    private void generateNotification(final String sourceUuid, final Encounter encounter, final Person recipient, final Role role, final User user, Person sender) {
         NotificationData notificationData = new NotificationData();
         notificationData.setRole(role);
 
