@@ -68,6 +68,7 @@ import java.net.URL;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -209,28 +210,30 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
         URL url = null;
         try {
             url = new URL(FMCurl);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setUseCaches(false);
-            conn.setDoInput(true);
-            conn.setDoOutput(true);
-
-            conn.setRequestMethod("POST");
-            conn.setRequestProperty("Authorization","key="+authKey);
-            conn.setRequestProperty("Content-Type","application/json");
-
-            JSONObject json = new JSONObject();
             NotificationTokenService notificationTokenService = Context.getService(NotificationTokenService.class);
             List<NotificationToken> notificationTokens = notificationTokenService.getNotificationByUserId(user);
-            json.put("to",notificationTokens.get(0).getToken());
-            JSONObject info = new JSONObject();
-            info.put("title", "mUzima Consultation");
-            info.put("body", "Hello "+user.getSystemId()+" you have a consultation pending your review");
-            json.put("notification", info);
+            for(NotificationToken notificationToken : notificationTokens) {
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setUseCaches(false);
+                conn.setDoInput(true);
+                conn.setDoOutput(true);
 
-            OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
-            wr.write(json.toString());
-            wr.flush();
-            conn.getInputStream();
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("Authorization", "key=" + authKey);
+                conn.setRequestProperty("Content-Type", "application/json");
+
+                JSONObject json = new JSONObject();
+                json.put("to", notificationToken.getToken());
+                JSONObject info = new JSONObject();
+                info.put("title", "mUzima Consultation");
+                info.put("body", "Hello " + user.getSystemId() + " you have a consultation pending your review");
+                json.put("notification", info);
+
+                OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
+                wr.write(json.toString());
+                wr.flush();
+                conn.getInputStream();
+            }
         } catch (MalformedURLException e) {
             e.printStackTrace();
         } catch (IOException e) {
