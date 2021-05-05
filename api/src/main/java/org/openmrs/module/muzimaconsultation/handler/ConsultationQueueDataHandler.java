@@ -37,13 +37,17 @@ import org.openmrs.PersonName;
 import org.openmrs.Provider;
 import org.openmrs.Role;
 import org.openmrs.User;
+import org.openmrs.Visit;
+import org.openmrs.VisitType;
 import org.openmrs.annotation.Handler;
 import org.openmrs.api.LocationService;
 import org.openmrs.api.PatientService;
+import org.openmrs.api.VisitService;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.muzima.api.service.DataService;
 import org.openmrs.module.muzima.api.service.NotificationTokenService;
 import org.openmrs.module.muzima.exception.QueueProcessorException;
+import org.openmrs.module.muzima.model.MuzimaSetting;
 import org.openmrs.module.muzima.model.NotificationData;
 import org.openmrs.module.muzima.model.NotificationToken;
 import org.openmrs.module.muzima.model.QueueData;
@@ -54,6 +58,7 @@ import org.openmrs.module.muzima.api.service.MuzimaFormService;
 import org.openmrs.module.muzima.api.service.RegistrationDataService;
 import org.openmrs.module.muzima.model.RegistrationData;
 import org.openmrs.obs.ComplexData;
+import org.openmrs.util.OpenmrsUtil;
 import org.openmrs.web.WebConstants;
 import org.springframework.stereotype.Component;
 
@@ -69,12 +74,19 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+
+import static org.openmrs.module.muzima.utils.Constants.MuzimaSettings.DEFAULT_MUZIMA_VISIT_TYPE_SETTING_PROPERTY;
+import static org.openmrs.module.muzima.utils.Constants.MuzimaSettings.MUZIMA_VISIT_GENERATION_SETTING_PROPERTY;
+import static org.openmrs.module.muzima.utils.MuzimaSettingUtils.getMuzimaSetting;
 
 /**
  */
@@ -387,10 +399,22 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
         String value=null;
         Obs obs = new Obs();
         obs.setConcept(concept);
+        boolean isObsUpdate = false;
+        String obsUuid = null;
 
-        //check and parse if obs_value / obs_datetime object
+        System.out.println("+++++++++++++++++++++++++PPPPPPPPPPPPPPPPPPPpxx "+o);
+
+        //check and parse if obs_value / obs_datetime / obs_valuetext/ obs_valuecoded object
         if(o instanceof LinkedHashMap){
             LinkedHashMap obj = (LinkedHashMap)o;
+            System.out.println("+++++++++++++++++++++++++PPPPPPPPPPPPPPPPPPPp "+obj);
+            if(obj.containsKey("obs_valueuuid")){
+                isObsUpdate = true;
+                String valueUuid = (String)obj.get("obs_valueuuid");
+                obsUuid = valueUuid;
+                System.out.println("+++++++++++++++++++++++++PPPPPPPPPPPPPPPPPPPpyy "+valueUuid);
+//                obs.setUuid(valueUuid);
+            }
             if(obj.containsKey("obs_value")){
                 value = (String)obj.get("obs_value");
             }
@@ -398,6 +422,54 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
                 String dateString = (String)obj.get("obs_datetime");
                 Date obsDateTime = parseDate(dateString);
                 obs.setObsDatetime(obsDateTime);
+            }
+            if(obj.containsKey("obs_valuetext")){
+                String valueText = (String)obj.get("obs_valuetext");
+                obs.setValueText(valueText);
+            }
+            if(obj.containsKey("obs_valuecoded")){
+                String valueCodedString = (String)obj.get("obs_valuecoded");
+                String[] valueCodedElements = StringUtils.split(valueCodedString, "\\^");
+                int valueCodedId = Integer.parseInt(valueCodedElements[0]);
+                Concept valueCoded = Context.getConceptService().getConcept(valueCodedId);
+                if (valueCoded == null) {
+                    queueProcessorException.addException(new Exception("Unable to find concept for value coded with id: " + valueCodedId));
+                } else {
+                    obs.setValueCoded(valueCoded);
+                }
+            }
+        }else if(o instanceof JSONObject) {
+            JSONObject obj = (JSONObject)o;
+            System.out.println("+++++++++++++++++++++++++PPPPPPPPPPPPPPPPPPPptttttt "+obj);
+            if(obj.containsKey("obs_value")){
+                value = (String)obj.get("obs_value");
+            }
+            if(obj.containsKey("obs_datetime")){
+                String dateString = (String)obj.get("obs_datetime");
+                Date obsDateTime = parseDate(dateString);
+                obs.setObsDatetime(obsDateTime);
+            }
+            if(obj.containsKey("obs_valuetext")){
+                String valueText = (String)obj.get("obs_valuetext");
+                obs.setValueText(valueText);
+            }
+            if(obj.containsKey("obs_valueuuid")){
+                isObsUpdate = true;
+                String valueUuid = (String)obj.get("obs_valueuuid");
+                obsUuid = valueUuid;
+                System.out.println("+++++++++++++++++++++++++PPPPPPPPPPPPPPPPPPPpyy "+valueUuid);
+                //obs.setUuid(valueUuid);
+            }
+            if(obj.containsKey("obs_valuecoded")){
+                String valueCodedString = (String)obj.get("obs_valuecoded");
+                String[] valueCodedElements = StringUtils.split(valueCodedString, "\\^");
+                int valueCodedId = Integer.parseInt(valueCodedElements[0]);
+                Concept valueCoded = Context.getConceptService().getConcept(valueCodedId);
+                if (valueCoded == null) {
+                    queueProcessorException.addException(new Exception("Unable to find concept for value coded with id: " + valueCodedId));
+                } else {
+                    obs.setValueCoded(valueCoded);
+                }
             }
         }else{
             value = o.toString();
@@ -421,14 +493,20 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
         } else if (concept.getDatatype().isText()) {
             obs.setValueText(value);
         } else if (concept.getDatatype().isComplex()) {
-            String uniqueComplexName = UUID.randomUUID().toString();
-            InputStream inputStream = new ByteArrayInputStream(DatatypeConverter.parseBase64Binary(value));
-            // TODO: this handler only assume jpg are coming for now. Need to add this extra information in the payload.
-            ComplexData complexData = new ComplexData(uniqueComplexName + ".jpg", inputStream);
-            obs.setComplexData(complexData);
-            // see https://tickets.openmrs.org/browse/TRUNK-2582 for the fix version
-            String handlerString = Context.getConceptService().getConceptComplex(obs.getConcept().getConceptId()).getHandler();
-            Context.getObsService().getHandler(handlerString).saveObs(obs);
+            System.out.println("+++++++++++++++++++++++++PPPPPPPPPPPPPPPPPPPp "+isObsUpdate);
+            if(!isObsUpdate) {
+                String uniqueComplexName = UUID.randomUUID().toString();
+                InputStream inputStream = new ByteArrayInputStream(DatatypeConverter.parseBase64Binary(value));
+                // TODO: this handler only assume jpg are coming for now. Need to add this extra information in the payload.
+                ComplexData complexData = new ComplexData(uniqueComplexName + ".jpg", inputStream);
+                obs.setComplexData(complexData);
+                // see https://tickets.openmrs.org/browse/TRUNK-2582 for the fix version
+                String handlerString = Context.getConceptService().getConceptComplex(obs.getConcept().getConceptId()).getHandler();
+                Context.getObsService().getHandler(handlerString).saveObs(obs);
+            }else{
+                Obs obs1 = Context.getObsService().getObsByUuid(obsUuid);
+                obs.setValueComplex(obs1.getValueComplex());
+            }
         }
         // only add if the value is not empty :)
         encounter.addObs(obs);
@@ -519,6 +597,68 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
 
         Date encounterDatetime = JsonUtils.readAsDate(encounterPayload, "$['encounter']['encounter.encounter_datetime']");
         encounter.setEncounterDatetime(encounterDatetime);
+
+        String encounterId = JsonUtils.readAsString(encounterPayload, "$['encounter']['encounter.encounter_id']");
+        String activeSetupConfigUuid = org.openmrs.module.muzima.utils.JsonUtils.readAsString(encounterPayload, "$['encounter']['encounter.setup_config_uuid']");
+        if(encounterId == null){
+//            MuzimaSetting muzimaVisitSetting = getMuzimaSetting(MUZIMA_VISIT_GENERATION_SETTING_PROPERTY,activeSetupConfigUuid);
+//            boolean isVisitGenerationEnabled = false;
+//            if(muzimaVisitSetting != null){
+//                isVisitGenerationEnabled = muzimaVisitSetting.getValueBoolean();
+//            }
+//            if(isVisitGenerationEnabled) {
+//                VisitService visitService = Context.getService(VisitService.class);
+//                List<Visit> patientVisit = visitService.getVisitsByPatient(encounter.getPatient(), true, false);
+//                Visit encounterVisit = null;
+//                Collections.sort(patientVisit, visitDateTimeComparator);
+//                for (Visit visit : patientVisit) {
+//                    if (visit.getStopDatetime() == null) {
+//                        if (encounterDatetime.compareTo(visit.getStartDatetime()) >= 0) {
+//                            encounterVisit = visit;
+//                            break;
+//                        }
+//                    } else if (encounterDatetime.compareTo(visit.getStartDatetime()) >= 0 && (encounterDatetime.compareTo(visit.getStopDatetime()) <= 0)) {
+//                        encounterVisit = visit;
+//                        break;
+//                    }
+//                }
+//
+//                if (encounterVisit == null) {
+//                    MuzimaSetting defaultMuzimaVisitTypeSetting = getMuzimaSetting(DEFAULT_MUZIMA_VISIT_TYPE_SETTING_PROPERTY, activeSetupConfigUuid);
+//                    String defaultMuzimaVisitTypeUuid = "";
+//                    if (defaultMuzimaVisitTypeSetting != null) {
+//                        defaultMuzimaVisitTypeUuid = defaultMuzimaVisitTypeSetting.getValueString();
+//                        if (!defaultMuzimaVisitTypeUuid.isEmpty()) {
+//                            VisitType visitType = visitService.getVisitTypeByUuid(defaultMuzimaVisitTypeUuid);
+//                            if (visitType != null) {
+//                                String uuid = UUID.randomUUID().toString();
+//                                Visit visit = new Visit();
+//                                visit.setPatient(encounter.getPatient());
+//                                visit.setVisitType(visitType);
+//                                visit.setStartDatetime(OpenmrsUtil.firstSecondOfDay(encounter.getEncounterDatetime()));
+//                                visit.setStopDatetime(OpenmrsUtil.getLastMomentOfDay(encounter.getEncounterDatetime()));
+//                                visit.setCreator(user);
+//                                visit.setDateCreated(new Date());
+//                                visit.setUuid(uuid);
+//                                visitService.saveVisit(visit);
+//                                encounterVisit = visitService.getVisitByUuid(uuid);
+//                            } else {
+//                                queueProcessorException.addException(new Exception("Unable to find default visit type with uuid " + defaultMuzimaVisitTypeUuid));
+//                            }
+//                        } else {
+//                            queueProcessorException.addException(new Exception("Unable to find default visit type. Default visit type setting not set. "));
+//                        }
+//
+//                    } else {
+//                        queueProcessorException.addException(new Exception("Unable to find default visit type. Default visit type setting not set. "));
+//                    }
+//                }
+//                encounter.setVisit(encounterVisit);
+//            }
+        } else {
+           // Encounter encounter1 = Context.getEncounterService().getEncounter(Integer.valueOf(encounterId));
+           // encounter.setVisit(encounter1.getVisit());
+        }
     }
 
     private Date parseDate(final String dateValue) {
@@ -540,4 +680,11 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
     public String getDiscriminator() {
         return DISCRIMINATOR_VALUE;
     }
+
+    private final Comparator<Visit> visitDateTimeComparator = new Comparator<Visit>() {
+        @Override
+        public int compare(Visit lhs, Visit rhs) {
+            return -lhs.getStartDatetime().compareTo(rhs.getStartDatetime());
+        }
+    };
 }
