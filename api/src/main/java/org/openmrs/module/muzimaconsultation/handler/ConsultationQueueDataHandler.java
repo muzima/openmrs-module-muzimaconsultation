@@ -110,40 +110,46 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
 
     private Encounter encounter;
 
+    private List<Obs> obsToBeVoided;
+
     @Override
     public void process(final QueueData queueData) throws QueueProcessorException {
 
         try {
             if (validate(queueData)) {
                 Context.getEncounterService().saveEncounter(encounter);
-
-                try {
-                    Role role = null;
-                    Person recipient = null;
-                    User user = null;
-                    Object consultationObject = JsonUtils.readAsObject(queueData.getPayload(), "$['consultation']");
-                    String recipientString = JsonUtils.readAsString(String.valueOf(consultationObject), "$['consultation.recipient']");
-                    String sourceUuid = JsonUtils.readAsString(String.valueOf(consultationObject), "$['consultation.sourceUuid']");
-                    String[] recipientParts = StringUtils.split(recipientString, ":");
-                    if (ArrayUtils.getLength(recipientParts) == 2) {
-                        if (StringUtils.equalsIgnoreCase(recipientParts[1], "u")) {
-                            user = Context.getUserService().getUserByUsername(recipientParts[0]);
+                for(Obs obs : obsToBeVoided){
+                    Context.getObsService().voidObs(obs,"Obs Update");
+                }
+                Object consultationObject = JsonUtils.readAsObject(queueData.getPayload(), "$['consultation']");
+                String recipientString = JsonUtils.readAsString(String.valueOf(consultationObject), "$['consultation.recipient']");
+                if(recipientString != null) {
+                    try {
+                        Role role = null;
+                        Person recipient = null;
+                        User user = null;
+                        String sourceUuid = JsonUtils.readAsString(String.valueOf(consultationObject), "$['consultation.sourceUuid']");
+                        String[] recipientParts = StringUtils.split(recipientString, ":");
+                        if (ArrayUtils.getLength(recipientParts) == 2) {
+                            if (StringUtils.equalsIgnoreCase(recipientParts[1], "u")) {
+                                user = Context.getUserService().getUserByUsername(recipientParts[0]);
+                                recipient = user.getPerson();
+                            } else if (StringUtils.equalsIgnoreCase(recipientParts[1], "g")) {
+                                role = Context.getUserService().getRole(recipientParts[0]);
+                            }
+                        } else {
+                            user = Context.getUserService().getUserByUsername(recipientString);
                             recipient = user.getPerson();
-                        } else if (StringUtils.equalsIgnoreCase(recipientParts[1], "g")) {
-                            role = Context.getUserService().getRole(recipientParts[0]);
                         }
-                    }else{
-                        user = Context.getUserService().getUserByUsername(recipientString);
-                        recipient = user.getPerson();
-                    }
-                    String providerString = JsonUtils.readAsString(queueData.getPayload(), "$['encounter']['encounter.provider_id']");
-                    Provider provider = Context.getProviderService().getProviderByIdentifier(providerString);
-                    generateNotification(sourceUuid, encounter, recipient, role, user, provider.getPerson());
-                } catch (Exception e) {
-                    if (!e.getClass().equals(QueueProcessorException.class)) {
-                        String reason = "Unable to generate notification information. Rolling back encounter.";
-                        queueProcessorException.addException(new Exception(reason, e));
-                        Context.getEncounterService().voidEncounter(encounter, reason);
+                        String providerString = JsonUtils.readAsString(queueData.getPayload(), "$['encounter']['encounter.provider_id']");
+                        Provider provider = Context.getProviderService().getProviderByIdentifier(providerString);
+                        generateNotification(sourceUuid, encounter, recipient, role, user, provider.getPerson());
+                    } catch (Exception e) {
+                        if (!e.getClass().equals(QueueProcessorException.class)) {
+                            String reason = "Unable to generate notification information. Rolling back encounter.";
+                            queueProcessorException.addException(new Exception(reason, e));
+                            Context.getEncounterService().voidEncounter(encounter, reason);
+                        }
                     }
                 }
             }
@@ -163,6 +169,7 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
             queueProcessorException = new QueueProcessorException();
             log.info("Processing encounter form data: " + queueData.getUuid());
             encounter = new Encounter();
+            obsToBeVoided = new ArrayList<Obs>();
             String payload = queueData.getPayload();
 
             //Object encounterObject = JsonUtils.readAsObject(queueData.getPayload(), "$['encounter']");
@@ -398,6 +405,7 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
     private void createObs(final Encounter encounter, final Obs parentObs, final Concept concept, final Object o) {
         String value=null;
         Obs obs = new Obs();
+        Obs obs1 = new Obs();
         obs.setConcept(concept);
         boolean isObsUpdate = false;
         String obsUuid = null;
@@ -412,8 +420,10 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
                 isObsUpdate = true;
                 String valueUuid = (String)obj.get("obs_valueuuid");
                 obsUuid = valueUuid;
+                obs1 = Context.getObsService().getObsByUuid(obsUuid);
+                obsToBeVoided.add(obs1);
+                obs.setPreviousVersion(obs1);
                 System.out.println("+++++++++++++++++++++++++PPPPPPPPPPPPPPPPPPPpyy "+valueUuid);
-//                obs.setUuid(valueUuid);
             }
             if(obj.containsKey("obs_value")){
                 value = (String)obj.get("obs_value");
@@ -441,6 +451,15 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
         }else if(o instanceof JSONObject) {
             JSONObject obj = (JSONObject)o;
             System.out.println("+++++++++++++++++++++++++PPPPPPPPPPPPPPPPPPPptttttt "+obj);
+            if(obj.containsKey("obs_valueuuid")){
+                isObsUpdate = true;
+                String valueUuid = (String)obj.get("obs_valueuuid");
+                obsUuid = valueUuid;
+                obs1 = Context.getObsService().getObsByUuid(obsUuid);
+                obsToBeVoided.add(obs1);
+                obs.setPreviousVersion(obs1);
+                System.out.println("+++++++++++++++++++++++++PPPPPPPPPPPPPPPPPPPpyy "+valueUuid);
+            }
             if(obj.containsKey("obs_value")){
                 value = (String)obj.get("obs_value");
             }
@@ -452,13 +471,6 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
             if(obj.containsKey("obs_valuetext")){
                 String valueText = (String)obj.get("obs_valuetext");
                 obs.setValueText(valueText);
-            }
-            if(obj.containsKey("obs_valueuuid")){
-                isObsUpdate = true;
-                String valueUuid = (String)obj.get("obs_valueuuid");
-                obsUuid = valueUuid;
-                System.out.println("+++++++++++++++++++++++++PPPPPPPPPPPPPPPPPPPpyy "+valueUuid);
-                //obs.setUuid(valueUuid);
             }
             if(obj.containsKey("obs_valuecoded")){
                 String valueCodedString = (String)obj.get("obs_valuecoded");
@@ -504,8 +516,8 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
                 String handlerString = Context.getConceptService().getConceptComplex(obs.getConcept().getConceptId()).getHandler();
                 Context.getObsService().getHandler(handlerString).saveObs(obs);
             }else{
-                Obs obs1 = Context.getObsService().getObsByUuid(obsUuid);
-                obs.setValueComplex(obs1.getValueComplex());
+                Obs complexObs = Context.getObsService().getObsByUuid(obsUuid);
+                obs.setValueComplex(complexObs.getValueComplex());
             }
         }
         // only add if the value is not empty :)
