@@ -57,13 +57,13 @@ public class NotificationsController {
             Person person = Context.getPersonService().getPersonByUuid(uuid);
             if (outgoing) {
                 pages = (service.countNotificationDataBySender(person, search, "unread").intValue() + pageSize - 1) / pageSize;
-                notificationDataList = service.getNotificationDataBySender(person, search, pageNumber, pageSize, "unread");
+                notificationDataList = service.getNotificationDataBySender(person, search, pageNumber, pageSize, "unread", null);
             } else {
                 pages = (service.countNotificationDataByReceiver(person, search, "unread").intValue() + pageSize - 1) / pageSize;
-                notificationDataList = service.getNotificationDataByReceiver(person, search, pageNumber, pageSize, "unread");
+                notificationDataList = service.getNotificationDataByReceiver(person, search, pageNumber, pageSize, "unread", null);
                 if (showRead) {
                     pages = (service.countNotificationDataByReceiver(person, search, "read").intValue() + pageSize - 1) / pageSize;
-                    readNotificationDataList = service.getNotificationDataByReceiver(person, search, pageNumber, pageSize, "read");
+                    readNotificationDataList = service.getNotificationDataByReceiver(person, search, pageNumber, pageSize, "read", null);
                     for (NotificationData notificationData : readNotificationDataList) {
                         notificationDataList.add(notificationData);
                     }
