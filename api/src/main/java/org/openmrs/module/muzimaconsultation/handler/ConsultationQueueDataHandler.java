@@ -172,11 +172,11 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
             obsToBeVoided = new ArrayList<Obs>();
             String payload = queueData.getPayload();
 
-            //Object encounterObject = JsonUtils.readAsObject(queueData.getPayload(), "$['encounter']");
-            processEncounter(encounter, payload);
-
             //Object patientObject = JsonUtils.readAsObject(queueData.getPayload(), "$['patient']");
             processPatient(encounter, payload);
+
+            //Object encounterObject = JsonUtils.readAsObject(queueData.getPayload(), "$['encounter']");
+            processEncounter(encounter, payload);
 
             Object obsObject = JsonUtils.readAsObject(queueData.getPayload(), "$['observation']");
             processObs(encounter, null, obsObject);
@@ -407,15 +407,13 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
         Obs obs = new Obs();
         Obs obs1 = new Obs();
         obs.setConcept(concept);
+        obs.setCreator(encounter.getCreator());
         boolean isObsUpdate = false;
         String obsUuid = null;
-
-        System.out.println("+++++++++++++++++++++++++PPPPPPPPPPPPPPPPPPPpxx "+o);
 
         //check and parse if obs_value / obs_datetime / obs_valuetext/ obs_valuecoded object
         if(o instanceof LinkedHashMap){
             LinkedHashMap obj = (LinkedHashMap)o;
-            System.out.println("+++++++++++++++++++++++++PPPPPPPPPPPPPPPPPPPp "+obj);
             if(obj.containsKey("obs_valueuuid")){
                 isObsUpdate = true;
                 String valueUuid = (String)obj.get("obs_valueuuid");
@@ -423,7 +421,6 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
                 obs1 = Context.getObsService().getObsByUuid(obsUuid);
                 obsToBeVoided.add(obs1);
                 obs.setPreviousVersion(obs1);
-                System.out.println("+++++++++++++++++++++++++PPPPPPPPPPPPPPPPPPPpyy "+valueUuid);
             }
             if(obj.containsKey("obs_value")){
                 value = (String)obj.get("obs_value");
@@ -450,7 +447,6 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
             }
         }else if(o instanceof JSONObject) {
             JSONObject obj = (JSONObject)o;
-            System.out.println("+++++++++++++++++++++++++PPPPPPPPPPPPPPPPPPPptttttt "+obj);
             if(obj.containsKey("obs_valueuuid")){
                 isObsUpdate = true;
                 String valueUuid = (String)obj.get("obs_valueuuid");
@@ -458,7 +454,6 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
                 obs1 = Context.getObsService().getObsByUuid(obsUuid);
                 obsToBeVoided.add(obs1);
                 obs.setPreviousVersion(obs1);
-                System.out.println("+++++++++++++++++++++++++PPPPPPPPPPPPPPPPPPPpyy "+valueUuid);
             }
             if(obj.containsKey("obs_value")){
                 value = (String)obj.get("obs_value");
@@ -505,7 +500,6 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
         } else if (concept.getDatatype().isText()) {
             obs.setValueText(value);
         } else if (concept.getDatatype().isComplex()) {
-            System.out.println("+++++++++++++++++++++++++PPPPPPPPPPPPPPPPPPPp "+isObsUpdate);
             if(!isObsUpdate) {
                 String uniqueComplexName = UUID.randomUUID().toString();
                 InputStream inputStream = new ByteArrayInputStream(DatatypeConverter.parseBase64Binary(value));
@@ -612,64 +606,65 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
 
         String encounterId = JsonUtils.readAsString(encounterPayload, "$['encounter']['encounter.encounter_id']");
         String activeSetupConfigUuid = org.openmrs.module.muzima.utils.JsonUtils.readAsString(encounterPayload, "$['encounter']['encounter.setup_config_uuid']");
+
         if(encounterId == null){
-//            MuzimaSetting muzimaVisitSetting = getMuzimaSetting(MUZIMA_VISIT_GENERATION_SETTING_PROPERTY,activeSetupConfigUuid);
-//            boolean isVisitGenerationEnabled = false;
-//            if(muzimaVisitSetting != null){
-//                isVisitGenerationEnabled = muzimaVisitSetting.getValueBoolean();
-//            }
-//            if(isVisitGenerationEnabled) {
-//                VisitService visitService = Context.getService(VisitService.class);
-//                List<Visit> patientVisit = visitService.getVisitsByPatient(encounter.getPatient(), true, false);
-//                Visit encounterVisit = null;
-//                Collections.sort(patientVisit, visitDateTimeComparator);
-//                for (Visit visit : patientVisit) {
-//                    if (visit.getStopDatetime() == null) {
-//                        if (encounterDatetime.compareTo(visit.getStartDatetime()) >= 0) {
-//                            encounterVisit = visit;
-//                            break;
-//                        }
-//                    } else if (encounterDatetime.compareTo(visit.getStartDatetime()) >= 0 && (encounterDatetime.compareTo(visit.getStopDatetime()) <= 0)) {
-//                        encounterVisit = visit;
-//                        break;
-//                    }
-//                }
-//
-//                if (encounterVisit == null) {
-//                    MuzimaSetting defaultMuzimaVisitTypeSetting = getMuzimaSetting(DEFAULT_MUZIMA_VISIT_TYPE_SETTING_PROPERTY, activeSetupConfigUuid);
-//                    String defaultMuzimaVisitTypeUuid = "";
-//                    if (defaultMuzimaVisitTypeSetting != null) {
-//                        defaultMuzimaVisitTypeUuid = defaultMuzimaVisitTypeSetting.getValueString();
-//                        if (!defaultMuzimaVisitTypeUuid.isEmpty()) {
-//                            VisitType visitType = visitService.getVisitTypeByUuid(defaultMuzimaVisitTypeUuid);
-//                            if (visitType != null) {
-//                                String uuid = UUID.randomUUID().toString();
-//                                Visit visit = new Visit();
-//                                visit.setPatient(encounter.getPatient());
-//                                visit.setVisitType(visitType);
-//                                visit.setStartDatetime(OpenmrsUtil.firstSecondOfDay(encounter.getEncounterDatetime()));
-//                                visit.setStopDatetime(OpenmrsUtil.getLastMomentOfDay(encounter.getEncounterDatetime()));
-//                                visit.setCreator(user);
-//                                visit.setDateCreated(new Date());
-//                                visit.setUuid(uuid);
-//                                visitService.saveVisit(visit);
-//                                encounterVisit = visitService.getVisitByUuid(uuid);
-//                            } else {
-//                                queueProcessorException.addException(new Exception("Unable to find default visit type with uuid " + defaultMuzimaVisitTypeUuid));
-//                            }
-//                        } else {
-//                            queueProcessorException.addException(new Exception("Unable to find default visit type. Default visit type setting not set. "));
-//                        }
-//
-//                    } else {
-//                        queueProcessorException.addException(new Exception("Unable to find default visit type. Default visit type setting not set. "));
-//                    }
-//                }
-//                encounter.setVisit(encounterVisit);
-//            }
+            MuzimaSetting muzimaVisitSetting = getMuzimaSetting(MUZIMA_VISIT_GENERATION_SETTING_PROPERTY,activeSetupConfigUuid);
+            boolean isVisitGenerationEnabled = false;
+            if(muzimaVisitSetting != null){
+                isVisitGenerationEnabled = muzimaVisitSetting.getValueBoolean();
+            }
+            if(isVisitGenerationEnabled) {
+                VisitService visitService = Context.getService(VisitService.class);
+                List<Visit> patientVisit = visitService.getVisitsByPatient(encounter.getPatient(), true, false);
+                Visit encounterVisit = null;
+                Collections.sort(patientVisit, visitDateTimeComparator);
+                for (Visit visit : patientVisit) {
+                    if (visit.getStopDatetime() == null) {
+                        if (encounterDatetime.compareTo(visit.getStartDatetime()) >= 0) {
+                            encounterVisit = visit;
+                            break;
+                        }
+                    } else if (encounterDatetime.compareTo(visit.getStartDatetime()) >= 0 && (encounterDatetime.compareTo(visit.getStopDatetime()) <= 0)) {
+                        encounterVisit = visit;
+                        break;
+                    }
+                }
+
+                if (encounterVisit == null) {
+                    MuzimaSetting defaultMuzimaVisitTypeSetting = getMuzimaSetting(DEFAULT_MUZIMA_VISIT_TYPE_SETTING_PROPERTY, activeSetupConfigUuid);
+                    String defaultMuzimaVisitTypeUuid = "";
+                    if (defaultMuzimaVisitTypeSetting != null) {
+                        defaultMuzimaVisitTypeUuid = defaultMuzimaVisitTypeSetting.getValueString();
+                        if (!defaultMuzimaVisitTypeUuid.isEmpty()) {
+                            VisitType visitType = visitService.getVisitTypeByUuid(defaultMuzimaVisitTypeUuid);
+                            if (visitType != null) {
+                                String uuid = UUID.randomUUID().toString();
+                                Visit visit = new Visit();
+                                visit.setPatient(encounter.getPatient());
+                                visit.setVisitType(visitType);
+                                visit.setStartDatetime(OpenmrsUtil.firstSecondOfDay(encounter.getEncounterDatetime()));
+                                visit.setStopDatetime(OpenmrsUtil.getLastMomentOfDay(encounter.getEncounterDatetime()));
+                                visit.setCreator(user);
+                                visit.setDateCreated(new Date());
+                                visit.setUuid(uuid);
+                                visitService.saveVisit(visit);
+                                encounterVisit = visitService.getVisitByUuid(uuid);
+                            } else {
+                                queueProcessorException.addException(new Exception("Unable to find default visit type with uuid " + defaultMuzimaVisitTypeUuid));
+                            }
+                        } else {
+                            queueProcessorException.addException(new Exception("Unable to find default visit type. Default visit type setting not set. "));
+                        }
+
+                    } else {
+                        queueProcessorException.addException(new Exception("Unable to find default visit type. Default visit type setting not set. "));
+                    }
+                }
+                encounter.setVisit(encounterVisit);
+            }
         } else {
-           // Encounter encounter1 = Context.getEncounterService().getEncounter(Integer.valueOf(encounterId));
-           // encounter.setVisit(encounter1.getVisit());
+            Encounter encounter1 = Context.getEncounterService().getEncounter(Integer.valueOf(encounterId));
+            encounter.setVisit(encounter1.getVisit());
         }
     }
 
