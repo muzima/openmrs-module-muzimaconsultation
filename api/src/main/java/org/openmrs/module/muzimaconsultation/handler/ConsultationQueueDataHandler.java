@@ -86,6 +86,7 @@ import java.util.UUID;
 
 import static org.openmrs.module.muzima.utils.Constants.MuzimaSettings.DEFAULT_MUZIMA_VISIT_TYPE_SETTING_PROPERTY;
 import static org.openmrs.module.muzima.utils.Constants.MuzimaSettings.MUZIMA_VISIT_GENERATION_SETTING_PROPERTY;
+import static org.openmrs.module.muzima.utils.Constants.MuzimaSettings.NOTIFICATION_FEATURE_STATUS_SETTING_PROPERTY;
 import static org.openmrs.module.muzima.utils.MuzimaSettingUtils.getMuzimaSetting;
 
 /**
@@ -142,8 +143,9 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
                             recipient = user.getPerson();
                         }
                         String providerString = JsonUtils.readAsString(queueData.getPayload(), "$['encounter']['encounter.provider_id']");
+                        String activeSetupConfigUuid = JsonUtils.readAsString(queueData.getPayload(), "$['encounter']['encounter.setup_config_uuid']");
                         Provider provider = Context.getProviderService().getProviderByIdentifier(providerString);
-                        generateNotification(sourceUuid, encounter, recipient, role, user, provider.getPerson());
+                        generateNotification(sourceUuid, encounter, recipient, role, user, provider.getPerson(), activeSetupConfigUuid);
                     } catch (Exception e) {
                         if (!e.getClass().equals(QueueProcessorException.class)) {
                             String reason = "Unable to generate notification information. Rolling back encounter.";
@@ -193,7 +195,7 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
         }
     }
 
-    private void generateNotification(final String sourceUuid, final Encounter encounter, final Person recipient, final Role role, final User user, Person sender) {
+    private void generateNotification(final String sourceUuid, final Encounter encounter, final Person recipient, final Role role, final User user, Person sender, String activeSetupConfigUuid) {
         NotificationData notificationData = new NotificationData();
         notificationData.setRole(role);
 
@@ -221,44 +223,50 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
         notificationData.setSender(sender);
         notificationData.setReceiver(recipient);
         Context.getService(DataService.class).saveNotificationData(notificationData);
-
-        //Start of sending Notification
-        String authKey = AUTH_KEY_FCM;
-        String FMCurl = API_URL_FCM;
-
-        URL url = null;
-        try {
-            url = new URL(FMCurl);
-            NotificationTokenService notificationTokenService = Context.getService(NotificationTokenService.class);
-            List<NotificationToken> notificationTokens = notificationTokenService.getNotificationByUserId(user);
-            for(NotificationToken notificationToken : notificationTokens) {
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setUseCaches(false);
-                conn.setDoInput(true);
-                conn.setDoOutput(true);
-
-                conn.setRequestMethod("POST");
-                conn.setRequestProperty("Authorization", "key=" + authKey);
-                conn.setRequestProperty("Content-Type", "application/json");
-
-                JSONObject json = new JSONObject();
-                json.put("to", notificationToken.getToken());
-                JSONObject info = new JSONObject();
-                info.put("title", "mUzima Consultation");
-                info.put("body", "Hello " + user.getSystemId() + " you have a consultation pending your review");
-                json.put("notification", info);
-
-                OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
-                wr.write(json.toString());
-                wr.flush();
-                conn.getInputStream();
-            }
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+        MuzimaSetting muzimaVisitSetting = getMuzimaSetting(NOTIFICATION_FEATURE_STATUS_SETTING_PROPERTY,activeSetupConfigUuid);
+        boolean isNotificationStatusEnabled = false;
+        if(muzimaVisitSetting != null){
+            isNotificationStatusEnabled = muzimaVisitSetting.getValueBoolean();
         }
-        //End of sending Notification
+        if(isNotificationStatusEnabled) {
+            //Start of sending Notification
+            String authKey = AUTH_KEY_FCM;
+            String FMCurl = API_URL_FCM;
+
+            URL url = null;
+            try {
+                url = new URL(FMCurl);
+                NotificationTokenService notificationTokenService = Context.getService(NotificationTokenService.class);
+                List<NotificationToken> notificationTokens = notificationTokenService.getNotificationByUserId(user);
+                for (NotificationToken notificationToken : notificationTokens) {
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn.setUseCaches(false);
+                    conn.setDoInput(true);
+                    conn.setDoOutput(true);
+
+                    conn.setRequestMethod("POST");
+                    conn.setRequestProperty("Authorization", "key=" + authKey);
+                    conn.setRequestProperty("Content-Type", "application/json");
+
+                    JSONObject json = new JSONObject();
+                    json.put("to", notificationToken.getToken());
+                    JSONObject info = new JSONObject();
+                    info.put("title", "mUzima Consultation");
+                    info.put("body", "Hello " + user.getSystemId() + " you have a consultation pending your review");
+                    json.put("notification", info);
+
+                    OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
+                    wr.write(json.toString());
+                    wr.flush();
+                    conn.getInputStream();
+                }
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            //End of sending Notification
+        }
     }
 
     private void processPatient(final Encounter encounter, final Object patientObject) {
@@ -605,15 +613,15 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
         encounter.setEncounterDatetime(encounterDatetime);
 
         String encounterId = JsonUtils.readAsString(encounterPayload, "$['encounter']['encounter.encounter_id']");
-        String activeSetupConfigUuid = org.openmrs.module.muzima.utils.JsonUtils.readAsString(encounterPayload, "$['encounter']['encounter.setup_config_uuid']");
+        String activeSetupConfigUuid = JsonUtils.readAsString(encounterPayload, "$['encounter']['encounter.setup_config_uuid']");
 
-        if(encounterId == null){
-            MuzimaSetting muzimaVisitSetting = getMuzimaSetting(MUZIMA_VISIT_GENERATION_SETTING_PROPERTY,activeSetupConfigUuid);
-            boolean isVisitGenerationEnabled = false;
-            if(muzimaVisitSetting != null){
-                isVisitGenerationEnabled = muzimaVisitSetting.getValueBoolean();
-            }
-            if(isVisitGenerationEnabled) {
+        MuzimaSetting muzimaVisitSetting = getMuzimaSetting(MUZIMA_VISIT_GENERATION_SETTING_PROPERTY,activeSetupConfigUuid);
+        boolean isVisitGenerationEnabled = false;
+        if(muzimaVisitSetting != null){
+            isVisitGenerationEnabled = muzimaVisitSetting.getValueBoolean();
+        }
+        if(isVisitGenerationEnabled) {
+            if (encounterId == null) {
                 VisitService visitService = Context.getService(VisitService.class);
                 List<Visit> patientVisit = visitService.getVisitsByPatient(encounter.getPatient(), true, false);
                 Visit encounterVisit = null;
@@ -661,10 +669,10 @@ public class ConsultationQueueDataHandler implements QueueDataHandler {
                     }
                 }
                 encounter.setVisit(encounterVisit);
+            } else {
+                Encounter encounter1 = Context.getEncounterService().getEncounter(Integer.valueOf(encounterId));
+                encounter.setVisit(encounter1.getVisit());
             }
-        } else {
-            Encounter encounter1 = Context.getEncounterService().getEncounter(Integer.valueOf(encounterId));
-            encounter.setVisit(encounter1.getVisit());
         }
     }
 
